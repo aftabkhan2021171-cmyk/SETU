@@ -1,13 +1,25 @@
 import { useState, FormEvent, useEffect } from 'react';
-import { LuPlus, LuRefreshCw, LuSearch, LuPencil, LuTriangleAlert, LuCircleCheck, LuCircleX, LuClock } from 'react-icons/lu';
+import { LuPlus, LuRefreshCw, LuSearch, LuPencil, LuTriangleAlert, LuCircleCheck, LuCircleX, LuClock, LuDownload, LuSparkles } from 'react-icons/lu';
 import { Button, Dialog, Tag, useToast } from './ui';
 import { useStore, Status, Patient } from './store';
 import { db, OutboxItem } from './lib/db';
+import { useI18n } from './lib/i18n';
+import { exportPatientsToCsv } from './lib/export';
 
 export const go = (p: string) => { location.hash = p; };
 
+const PRESET_COLUMNS = [
+  { label: '+ Phone', key: 'Phone Number', placeholder: '+91 9876543210' },
+  { label: '+ Blood Group', key: 'Blood Group', placeholder: 'B+, O+, A+, AB+' },
+  { label: '+ Aadhaar / ID', key: 'Govt ID / Aadhaar', placeholder: 'XXXX-XXXX-XXXX' },
+  { label: '+ Guardian', key: 'Guardian Name', placeholder: 'Parent / Spouse' },
+  { label: '+ Pregnancy / ANC', key: 'ANC Trimester', placeholder: '1st / 2nd / 3rd' },
+  { label: '+ Allergies', key: 'Allergies', placeholder: 'Penicillin, Sulfa, None' }
+];
+
 export function Dashboard() {
   const { s, createPatient, updatePatientField } = useStore();
+  const { t } = useI18n();
   const toast = useToast();
   const [q, setQ] = useState('');
   const [f, setF] = useState<'All' | Status>('All');
@@ -20,6 +32,7 @@ export function Dashboard() {
   const [l, setL] = useState('');
   const [customCols, setCustomCols] = useState<{ key: string; value: string }[]>([]);
   const [err, setErr] = useState('');
+  const [allowDupOverride, setAllowDupOverride] = useState(false);
 
   // Form states for Edit Patient
   const [editField, setEditField] = useState<'locality' | 'status' | 'phone' | 'allergy'>('status');
@@ -31,14 +44,35 @@ export function Dashboard() {
     (p.name + p.id + p.locality).toLowerCase().includes(q.toLowerCase())
   );
 
+  // Real-time duplicate & contradiction detection
+  const cleanName = n.trim().toLowerCase();
+  const cleanLoc = l.trim().toLowerCase();
+  const duplicatePatient = s.patients.find(p => {
+    if (!cleanName || cleanName.length < 2) return false;
+    const pClean = p.name.replace(/\s*\(synthetic\)/i, '').trim().toLowerCase();
+    if (pClean === cleanName) {
+      if (!cleanLoc || p.locality.trim().toLowerCase() === cleanLoc) return true;
+      if (a && Math.abs(p.age - Number(a)) <= 1) return true;
+    }
+    // Check if phone or government ID matches
+    for (const col of customCols) {
+      if (col.value.trim().length >= 6 && p.customFields) {
+        for (const existingVal of Object.values(p.customFields)) {
+          if (existingVal.trim().toLowerCase() === col.value.trim().toLowerCase()) return true;
+        }
+      }
+    }
+    return false;
+  });
+
   const saveNew = async (ev: FormEvent) => {
     ev.preventDefault();
     const age = Number(a);
     if (n.trim().length < 2 || !(age > 0 && age < 120) || !l.trim()) {
       return setErr('Name, age (1 to 119) and locality are required.');
     }
-    if (s.patients.some(p => p.name.toLowerCase() === n.trim().toLowerCase())) {
-      return setErr('A patient with this name already exists.');
+    if (duplicatePatient && !allowDupOverride) {
+      return setErr(`Existing patient record found (${duplicatePatient.name}, ID: ${duplicatePatient.id}). Open the existing patient to update, or check 'Register Anyway' if this is a distinct individual.`);
     }
 
     try {
@@ -63,6 +97,7 @@ export function Dashboard() {
       setL('');
       setCustomCols([]);
       setErr('');
+      setAllowDupOverride(false);
     } catch (e: any) {
       setErr(e.message || 'Failed to save patient');
     }
@@ -86,18 +121,18 @@ export function Dashboard() {
 
   return (
     <div className="page">
-      <h1>Field dashboard</h1>
+      <h1>{t.dashboard}</h1>
       <div className="banner">
         District: <b>{s.user?.district || 'General'}</b> · Logged in as: <b>{s.user?.name}</b> ({s.user?.role})
       </div>
 
       <div className="grid" style={{ marginBottom: 16 }}>
         <div className="card">
-          <div className="muted">Patients on this device</div>
+          <div className="muted">{t.patientsCount}</div>
           <h2>{s.patients.length}</h2>
         </div>
         <div className="card">
-          <div className="muted">Changes waiting to sync</div>
+          <div className="muted">{t.pendingSync}</div>
           <h2>{pendingChanges} operation(s)</h2>
         </div>
       </div>
@@ -108,7 +143,7 @@ export function Dashboard() {
             <label className="muted" htmlFor="q" style={{ display: 'none' }}>Search</label>
             <input
               id="q"
-              placeholder="Search name, ID or locality"
+              placeholder={t.searchPlaceholder}
               value={q}
               onChange={e => setQ(e.target.value)}
             />
@@ -119,12 +154,22 @@ export function Dashboard() {
             value={f}
             onChange={e => setF(e.target.value as 'All')}
           >
-            <option>All</option>
-            <option>Stable</option>
-            <option>Follow-up</option>
-            <option>Urgent</option>
+            <option value="All">{t.filterAll}</option>
+            <option value="Stable">{t.stable}</option>
+            <option value="Follow-up">{t.followUp}</option>
+            <option value="Urgent">{t.urgent}</option>
           </select>
-          <Button icon={<LuPlus />} onClick={() => setAdd(true)}>Add patient</Button>
+          <Button icon={<LuPlus />} onClick={() => { setAdd(true); setAllowDupOverride(false); setErr(''); }}>{t.addPatient}</Button>
+          <Button
+            variant="outlined"
+            icon={<LuDownload />}
+            onClick={() => {
+              exportPatientsToCsv(s.patients, s.vitals);
+              toast(`Exported ${s.patients.length} patient records to CSV`);
+            }}
+          >
+            {t.exportCsv}
+          </Button>
         </div>
 
         <div className="tw">
@@ -201,26 +246,60 @@ export function Dashboard() {
       </div>
 
       {add && (
-        <Dialog title="Add patient (Local Write First)" onClose={() => setAdd(false)}>
+        <Dialog title={`${t.addPatient} (Local Write First)`} onClose={() => setAdd(false)}>
           <form onSubmit={saveNew} noValidate>
             <div className="field">
-              <label htmlFor="an">Full name</label>
+              <label htmlFor="an">{t.fullName}</label>
               <input id="an" value={n} onChange={e => setN(e.target.value)} placeholder="e.g. Balwinder Kaur" />
             </div>
             <div className="field">
-              <label htmlFor="aa">Age</label>
+              <label htmlFor="aa">{t.age}</label>
               <input id="aa" inputMode="numeric" value={a} onChange={e => setA(e.target.value)} placeholder="e.g. 42" />
             </div>
             <div className="field">
-              <label htmlFor="al">Locality</label>
+              <label htmlFor="al">{t.locality}</label>
               <input id="al" value={l} onChange={e => setL(e.target.value)} placeholder="e.g. Gill Road, Ludhiana" />
+            </div>
+
+            {/* Quick Column Presets (Feature 7) */}
+            <div style={{ marginTop: 12 }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--grey)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
+                ⚡ Quick Presets:
+              </span>
+              <div className="row" style={{ gap: 4 }}>
+                {PRESET_COLUMNS.map(preset => {
+                  const alreadyAdded = customCols.some(c => c.key === preset.key);
+                  return (
+                    <button
+                      key={preset.key}
+                      type="button"
+                      disabled={alreadyAdded}
+                      style={{
+                        fontSize: '0.74rem',
+                        padding: '3px 8px',
+                        borderRadius: 14,
+                        border: '1px solid var(--line)',
+                        background: alreadyAdded ? '#ececec' : '#fff',
+                        color: alreadyAdded ? '#999' : 'var(--maroon)',
+                        cursor: alreadyAdded ? 'default' : 'pointer',
+                        fontWeight: 600
+                      }}
+                      onClick={() => {
+                        setCustomCols([...customCols, { key: preset.key, value: '' }]);
+                      }}
+                    >
+                      {preset.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Custom Dynamic Columns */}
             <div style={{ marginTop: 14, paddingTop: 10, borderTop: '1px dashed #d0c8b6' }}>
               <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--maroon)' }}>
-                  Custom Information Columns ({customCols.length})
+                  {t.customColumns} ({customCols.length})
                 </span>
                 <button
                   type="button"
@@ -235,7 +314,7 @@ export function Dashboard() {
                   }}
                   onClick={() => setCustomCols([...customCols, { key: '', value: '' }])}
                 >
-                  + Add Column
+                  {t.addColumn}
                 </button>
               </div>
 
@@ -280,10 +359,45 @@ export function Dashboard() {
               ))}
             </div>
 
-            {err && <div className="err">{err}</div>}
+            {/* Real-Time Duplicate Prevention / Anti-Contradiction Banner */}
+            {duplicatePatient && (
+              <div style={{ background: '#FFF3CD', border: '1px solid #FFE69C', padding: '10px 12px', borderRadius: 6, marginTop: 14, marginBottom: 6 }}>
+                <div style={{ fontWeight: 700, color: '#856404', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, fontSize: '0.85rem' }}>
+                  <LuTriangleAlert size={16} /> {t.duplicateDetected}
+                </div>
+                <div style={{ fontSize: '0.82rem', color: '#664D03', lineHeight: 1.4 }}>
+                  <strong>{duplicatePatient.name}</strong> (ID: {duplicatePatient.id}, {t.locality}: {duplicatePatient.locality}, {t.age}: {duplicatePatient.age}) is already recorded in the local database.
+                </div>
+                <div className="row" style={{ marginTop: 8, gap: 8 }}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setAdd(false);
+                      go(`/vitals?p=${duplicatePatient.id}`);
+                      toast(`Opened existing patient ${duplicatePatient.id}`);
+                    }}
+                  >
+                    {t.updateExisting} ({duplicatePatient.id})
+                  </Button>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.78rem', color: '#664D03', cursor: 'pointer', margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      style={{ width: 'auto', height: 'auto' }}
+                      checked={allowDupOverride}
+                      onChange={e => setAllowDupOverride(e.target.checked)}
+                    />
+                    {t.registerAnyway}
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {err && <div className="err" style={{ marginTop: 8 }}>{err}</div>}
             <div className="row" style={{ marginTop: 12 }}>
-              <Button type="submit">Save patient</Button>
-              <Button variant="outlined" onClick={() => setAdd(false)}>Cancel</Button>
+              <Button type="submit">{t.savePatient}</Button>
+              <Button variant="outlined" onClick={() => setAdd(false)}>{t.cancel}</Button>
             </div>
           </form>
         </Dialog>

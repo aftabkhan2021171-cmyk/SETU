@@ -20,6 +20,7 @@ import { Button, useToast, Dialog } from './ui';
 import { useStore } from './store';
 import { go } from './pages';
 import { loginWithCredentials, getApiBaseUrl, setApiBaseUrl } from './lib/auth';
+import { useI18n, LANGUAGES, LangCode } from './lib/i18n';
 import './login.css';
 
 type RoleHint = 'chw' | 'doctor';
@@ -30,6 +31,7 @@ const roles = [
 
 export function Login() {
   const { s, setOnline, reloadLocalData } = useStore();
+  const { lang, setLang, theme, setTheme } = useI18n();
   const toast = useToast();
   const [roleHint, setRoleHint] = useState<RoleHint>('chw');
   const [id, setId] = useState('chw1');
@@ -113,15 +115,36 @@ export function Login() {
           <span className="lg-badge"><LuShieldPlus size={22} /></span>
           <span className="lg-name">SETU</span>
         </div>
-        <div className="row" style={{ gap: 8 }}>
+        <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+          <select
+            value={lang}
+            onChange={e => setLang(e.target.value as LangCode)}
+            style={{ height: 28, fontSize: '0.75rem', padding: '0 4px', width: 'auto', background: '#fff' }}
+            aria-label="Language Selector"
+          >
+            {LANGUAGES.map(l => (
+              <option key={l.code} value={l.code}>
+                {l.label}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
             className="lg-chip"
-            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, height: 28, fontSize: '0.75rem', padding: '0 8px' }}
+            onClick={() => setTheme(theme === 'sunlight' ? 'default' : 'sunlight')}
+            title="Toggle Outdoor High-Contrast Sunlight Mode"
+          >
+            {theme === 'sunlight' ? '☀️ Sunlight: ON' : '☀️ Sun Mode'}
+          </button>
+          <button
+            type="button"
+            className="lg-chip"
+            style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, height: 28, fontSize: '0.75rem', padding: '0 8px' }}
             onClick={() => setSettingsOpen(true)}
             title="Configure Server URL"
           >
-            <LuSettings size={14} /> Server Settings
+            <LuSettings size={14} /> Server
           </button>
         </div>
       </header>

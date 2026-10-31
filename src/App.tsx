@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { LuMenu, LuX, LuUsers, LuActivity, LuStethoscope, LuGitMerge, LuRefreshCw, LuLogOut, LuWifi, LuWifiOff } from 'react-icons/lu';
+import { LuMenu, LuX, LuUsers, LuActivity, LuStethoscope, LuGitMerge, LuRefreshCw, LuLogOut, LuWifi, LuWifiOff, LuSun, LuMoon } from 'react-icons/lu';
 import { Button, IconButton, Toasts } from './ui';
 import { Store, useStore } from './store';
 import { Login } from './LoginPage';
 import { Dashboard, Vitals, Doctor, Conflicts, Sync, go } from './pages';
 import { logoutUser, touchActivity } from './lib/auth';
+import { useI18n, LANGUAGES, LangCode, AppTheme } from './lib/i18n';
 
 const useRoute = () => {
   const r = () => location.hash.slice(1) || '/login';
@@ -17,19 +18,21 @@ const useRoute = () => {
   return [h.split('?')[0], new URLSearchParams(h.split('?')[1] || '')] as const;
 };
 
-const items = [
-  ['/dashboard', 'Field dashboard', LuUsers],
-  ['/vitals', 'Vitals', LuActivity],
-  ['/doctor/triage', 'Doctor triage', LuStethoscope],
-  ['/doctor/conflicts', 'Conflicts', LuGitMerge],
-  ['/sync', 'Sync manager', LuRefreshCw]
-] as const;
-
 function Shell() {
   const { s, setOnline, reloadLocalData } = useStore();
+  const { lang, setLang, theme, setTheme, t } = useI18n();
   const [path, q] = useRoute();
   const [open, setOpen] = useState(false);
-  const known = items.some(i => i[0] === path) || path === '/login';
+
+  const navItems = [
+    ['/dashboard', t.dashboard, LuUsers],
+    ['/vitals', t.vitals, LuActivity],
+    ['/doctor/triage', t.doctorTriage, LuStethoscope],
+    ['/doctor/conflicts', t.conflicts, LuGitMerge],
+    ['/sync', t.syncManager, LuRefreshCw]
+  ] as const;
+
+  const known = navItems.some(i => i[0] === path) || path === '/login';
 
   useEffect(() => { setOpen(false); }, [path]);
 
@@ -82,7 +85,82 @@ function Shell() {
           </span>
         </div>
 
-        {items.map(([p, l, I]) => (
+        {/* Multi-Language Dropdown */}
+        <div style={{ margin: '4px 0 10px' }}>
+          <label style={{ fontSize: '0.72rem', color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: '.05em', display: 'block', marginBottom: 3 }}>
+            🌐 Language / ਭਾਸ਼ਾ
+          </label>
+          <select
+            value={lang}
+            onChange={e => setLang(e.target.value as LangCode)}
+            style={{ height: 32, fontSize: '0.8rem', padding: '0 6px' }}
+            aria-label="Select Language"
+          >
+            {LANGUAGES.map(l => (
+              <option key={l.code} value={l.code}>
+                {l.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Display Mode Switcher (Outdoor Sunlight / Dark / Default) */}
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ fontSize: '0.72rem', color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: '.05em', display: 'block', marginBottom: 3 }}>
+            🎨 Display Mode
+          </label>
+          <div className="row" style={{ gap: 4 }}>
+            <button
+              type="button"
+              className="btn sm"
+              style={{
+                flex: 1,
+                padding: '0 4px',
+                fontSize: '0.72rem',
+                background: theme === 'default' ? 'var(--maroon)' : '#fff',
+                color: theme === 'default' ? '#fff' : 'var(--ink)',
+                border: '1px solid var(--line)'
+              }}
+              onClick={() => setTheme('default')}
+            >
+              Default
+            </button>
+            <button
+              type="button"
+              className="btn sm"
+              style={{
+                flex: 1.1,
+                padding: '0 4px',
+                fontSize: '0.72rem',
+                background: theme === 'sunlight' ? '#000' : '#fff',
+                color: theme === 'sunlight' ? '#fff' : '#000',
+                border: '1px solid #000',
+                fontWeight: 700
+              }}
+              onClick={() => setTheme('sunlight')}
+              title="High-Contrast Mode for Direct Outdoor Sunlight"
+            >
+              ☀️ Sun
+            </button>
+            <button
+              type="button"
+              className="btn sm"
+              style={{
+                flex: 1,
+                padding: '0 4px',
+                fontSize: '0.72rem',
+                background: theme === 'dark' ? '#333' : '#fff',
+                color: theme === 'dark' ? '#fff' : 'var(--ink)',
+                border: '1px solid var(--line)'
+              }}
+              onClick={() => setTheme('dark')}
+            >
+              🌙 Dark
+            </button>
+          </div>
+        </div>
+
+        {navItems.map(([p, l, I]) => (
           <button key={p} className="nav" aria-current={path === p ? 'page' : undefined} onClick={() => go(p)}>
             <I size={18} />{l}
           </button>
@@ -90,17 +168,42 @@ function Shell() {
 
         <div style={{ flex: 1 }} />
         <Button variant="outlined" size="sm" icon={s.online ? <LuWifi /> : <LuWifiOff />} onClick={toggle}>
-          {s.online ? 'Online' : 'Offline'}
+          {s.online ? t.online : t.offline}
         </Button>
         <Button variant="text" size="sm" icon={<LuLogOut />} onClick={handleSignOut}>
-          Sign out ({s.user?.name?.split(' ')[0]})
+          {t.signOut} ({s.user?.name?.split(' ')[0]})
         </Button>
       </aside>
 
       <div className="main">
-        <div className="top">
-          <IconButton label="Open menu" onClick={() => setOpen(true)}><LuMenu /></IconButton>
-          <b style={{ color: 'var(--maroon)', letterSpacing: '.12em' }}>SETU</b>
+        <div className="top" style={{ justifyContent: 'space-between' }}>
+          <div className="row" style={{ gap: 8 }}>
+            <IconButton label="Open menu" onClick={() => setOpen(true)}><LuMenu /></IconButton>
+            <b style={{ color: 'var(--maroon)', letterSpacing: '.12em' }}>SETU</b>
+          </div>
+          <div className="row" style={{ gap: 6 }}>
+            <select
+              value={lang}
+              onChange={e => setLang(e.target.value as LangCode)}
+              style={{ height: 30, fontSize: '0.75rem', padding: '0 4px', width: 'auto' }}
+              aria-label="Language Selector Mobile"
+            >
+              {LANGUAGES.map(l => (
+                <option key={l.code} value={l.code}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="btn sm"
+              style={{ height: 30, padding: '0 8px', fontSize: '0.75rem' }}
+              onClick={() => setTheme(theme === 'sunlight' ? 'default' : theme === 'default' ? 'dark' : 'sunlight')}
+              title="Toggle Display Theme"
+            >
+              {theme === 'sunlight' ? '☀️ Sun' : theme === 'dark' ? '🌙 Dark' : '🎨 Mode'}
+            </button>
+          </div>
         </div>
         {path === '/dashboard' && <Dashboard />}
         {path === '/vitals' && <Vitals pid={q.get('p') || ''} />}

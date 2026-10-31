@@ -24,3 +24,94 @@ label{display:block;font-weight:600;font-size:13px;margin-bottom:4px}.field{marg
 .back{position:fixed;inset:0;background:#0006;display:flex;align-items:center;justify-content:center;padding:12px;z-index:40}.dlg{background:#fff;border-radius:var(--r);padding:20px;max-width:420px;width:100%}
 .banner{background:#fff8e6;border:1px solid var(--gold);border-radius:var(--r);padding:8px 12px;font-size:13px;margin-bottom:16px}
 @media(max-width:820px){.side{position:fixed;inset:0 auto 0 0;z-index:30;transform:translateX(-100%);transition:transform .15s}.side.open{transform:none}.top{display:flex}.page{padding:16px}.cols{grid-template-columns:1fr}}
+
+/* Sunlight Outdoor Mode (High-contrast for outdoor direct sunlight) */
+[data-theme="sunlight"] {
+  --maroon: #000000;
+  --paper: #ffffff;
+  --green: #006600;
+  --gold: #000000;
+  --ink: #000000;
+  --grey: #222222;
+  --line: #000000;
+  --red: #b30000;
+}
+[data-theme="sunlight"] body,
+[data-theme="sunlight"] .card,
+[data-theme="sunlight"] .side,
+[data-theme="sunlight"] input,
+[data-theme="sunlight"] select,
+[data-theme="sunlight"] .dlg {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+[data-theme="sunlight"] table th,
+[data-theme="sunlight"] table td {
+  border-bottom: 2px solid #000000 !important;
+  color: #000000 !important;
+}
+[data-theme="sunlight"] .nav[aria-current=page] {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+[data-theme="sunlight"] .btn.primary {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #000000;
+}
+[data-theme="sunlight"] .btn.outlined {
+  border: 2px solid #000000 !important;
+  color: #000000 !important;
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+  --maroon: #f28b99;
+  --paper: #121212;
+  --green: #4ade80;
+  --gold: #fbbf24;
+  --ink: #f3f4f6;
+  --grey: #9ca3af;
+  --line: #333333;
+  --red: #f87171;
+}
+[data-theme="dark"] body {
+  background: #121212 !important;
+  color: #f3f4f6 !important;
+}
+[data-theme="dark"] .card,
+[data-theme="dark"] .side,
+[data-theme="dark"] .top,
+[data-theme="dark"] .dlg {
+  background: #1e1e1e !important;
+  color: #f3f4f6 !important;
+  border-color: #333333 !important;
+}
+[data-theme="dark"] input,
+[data-theme="dark"] select {
+  background: #2a2a2a !important;
+  color: #f3f4f6 !important;
+  border-color: #444444 !important;
+}
+[data-theme="dark"] .nav {
+  color: #e5e7eb !important;
+}
+[data-theme="dark"] .nav:hover {
+  background: #282828 !important;
+}
+[data-theme="dark"] .nav[aria-current=page] {
+  background: #832737 !important;
+  color: #ffffff !important;
+}
+[data-theme="dark"] .banner {
+  background: #2a2418 !important;
+  border-color: #6d5222 !important;
+  color: #fef08a !important;
+}
+[data-theme="dark"] .btn.outlined,
+[data-theme="dark"] .btn.icon {
+  background: #1e1e1e !important;
+  border-color: #444444 !important;
+  color: #f3f4f6 !important;
+}
