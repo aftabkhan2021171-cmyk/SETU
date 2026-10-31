@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SETU Health - Secure Portal Access</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Plus Jakarta Sans Font -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with Forms and Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "error": "#ba1a1a",
+            "surface-container": "#efeeea",
+            "on-tertiary-fixed": "#410002",
+            "surface-container-high": "#eae8e4",
+            "outline-variant": "#dac0c2",
+            "surface-bright": "#fbf9f5",
+            "primary-fixed": "#ffd9dd",
+            "on-tertiary-fixed-variant": "#93000b",
+            "on-secondary-fixed-variant": "#5a4300",
+            "on-tertiary-container": "#ff7d71",
+            "primary-fixed-dim": "#ffb2bc",
+            "tertiary-fixed": "#ffdad6",
+            "surface-container-low": "#f5f3ef",
+            "surface-variant": "#e4e2de",
+            "on-error-container": "#93000a",
+            "tertiary": "#520003",
+            "on-primary-fixed": "#400013",
+            "tertiary-container": "#7b0008",
+            "secondary": "#775a00",
+            "on-secondary": "#ffffff",
+            "primary-container": "#6b1d2f",
+            "background": "#fbf9f5",
+            "on-background": "#1b1c1a",
+            "surface-dim": "#dbdad6",
+            "primary": "#4e051a",
+            "on-error": "#ffffff",
+            "surface": "#fbf9f5",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#ee8495",
+            "on-secondary-container": "#735700",
+            "secondary-container": "#fece57",
+            "surface-container-highest": "#e4e2de",
+            "on-primary-fixed-variant": "#7c2a3b",
+            "on-surface-variant": "#544244",
+            "outline": "#877274",
+            "on-tertiary": "#ffffff",
+            "on-secondary-fixed": "#251a00",
+            "inverse-primary": "#ffb2bc",
+            "on-surface": "#1b1c1a",
+            "inverse-surface": "#30312e",
+            "surface-tint": "#9a4152",
+            "tertiary-fixed-dim": "#ffb4ab",
+            "inverse-on-surface": "#f2f0ed",
+            "surface-container-lowest": "#ffffff",
+            "secondary-fixed-dim": "#eec14b",
+            "secondary-fixed": "#ffdf98",
+            "error-container": "#ffdad6"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "space-md": "1rem",
+            "margin-tablet": "1.5rem",
+            "space-sm": "0.5rem",
+            "margin-desktop": "2rem",
+            "space-lg": "1.5rem",
+            "margin": "1rem",
+            "gutter": "1rem",
+            "gutter-tablet": "1.25rem",
+            "gutter-desktop": "1.5rem",
+            "space-xl": "2rem"
+          },
+          "fontFamily": {
+            "label-md": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-xl": ["Plus Jakarta Sans"],
+            "metric-display": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+            "headline-lg-mobile": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+            "headline-xl": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "metric-display": ["32px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "26px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+            "headline-xl-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col justify-between selection:bg-primary-fixed selection:text-primary antialiased">
+<!-- Top Minimal Utility Bar -->
+<header class="w-full max-w-7xl mx-auto px-space-md py-space-md flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-surface-container-lowest">
+<span class="material-symbols-outlined text-headline-sm" data-icon="health_and_safety">health_and_safety</span>
+</div>
+<span class="font-headline-sm text-headline-sm font-bold text-primary tracking-tight">SETU Health</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+        Encrypted Portal
+      </span>
+<button aria-label="Language switcher" class="p-1.5 text-on-surface-variant hover:text-primary rounded-lg transition-colors" type="button">
+<span class="material-symbols-outlined text-headline-sm" data-icon="language">language</span>
+</button>
+</div>
+</header>
+<!-- Main Content Stage -->
+<main class="w-full max-w-lg mx-auto px-space-md py-space-sm flex-1 flex flex-col justify-center">
+<!-- Hero / Title Header -->
+<div class="text-center mb-space-lg">
+<h1 class="font-headline-xl-mobile md:font-headline-xl text-headline-xl-mobile md:text-headline-xl text-primary font-bold tracking-tight">
+        SETU
+      </h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">
+        Collaborative Tele-Health Network
+      </p>
+<div class="inline-flex items-center gap-2 mt-3 px-space-md py-1 rounded-full bg-surface-container-low border border-outline-variant/40">
+<span class="material-symbols-outlined text-label-md text-primary-container" data-icon="verified_user">verified_user</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Federated Clinical Handshake Active</span>
+</div>
+</div>
+<!-- Main Authentication Shell Card -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-space-lg shadow-[0px_2px_8px_rgba(107,29,47,0.03),0px_1px_3px_rgba(0,0,0,0.02)] relative">
+<!-- Role Switcher Segment -->
+<div class="mb-space-lg">
+<div class="flex items-center justify-between mb-space-xs">
+<label class="font-label-md text-label-md text-on-surface-variant">SELECT OPERATING ROLE</label>
+<span class="font-label-sm text-label-sm text-primary font-medium" id="role-badge">Front-line CHW</span>
+</div>
+<div aria-label="User role selection" class="grid grid-cols-2 gap-space-sm" role="radiogroup">
+<!-- Role 1: CHW (Default Active) -->
+<button aria-checked="true" class="role-card text-left p-space-md rounded-xl border-2 border-primary-container bg-surface-container-low transition-all duration-150 relative cursor-pointer group" id="role-chw" onclick="selectRole('chw')" role="radio" type="button">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="material-symbols-outlined text-headline-md text-primary-container" data-icon="home_health">home_health</span>
+<span class="indicator-icon w-5 h-5 rounded-full bg-primary-container text-surface-container-lowest flex items-center justify-center">
+<span class="material-symbols-outlined text-label-sm" data-icon="check">check</span>
+</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-primary font-semibold leading-tight">
+              Community Health Worker
+            </div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Field surveys, rapid vitals &amp; triage sync
+            </p>
+</button>
+<!-- Role 2: Clinician / Doctor -->
+<button aria-checked="false" class="role-card text-left p-space-md rounded-xl border border-outline-variant/50 bg-surface-container-lowest hover:border-primary-container/40 transition-all duration-150 relative cursor-pointer group" id="role-clinician" onclick="selectRole('clinician')" role="radio" type="button">
+<div class="flex items-center justify-between mb-space-xs">
+<span class="material-symbols-outlined text-headline-md text-on-surface-variant group-hover:text-primary-container transition-colors" data-icon="stethoscope">stethoscope</span>
+<span class="indicator-icon w-5 h-5 rounded-full border border-outline-variant flex items-center justify-center opacity-0 group-hover:opacity-40">
+<span class="material-symbols-outlined text-label-sm" data-icon="check">check</span>
+</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface font-semibold leading-tight group-hover:text-primary transition-colors">
+              Doctor / Clinician
+            </div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Dossier triage, approvals &amp; RX adjust
+            </p>
+</button>
+</div>
+</div>
+<!-- Credentials Form -->
+<form class="space-y-space-md" onsubmit="handlePortalAuth(event)">
+<!-- Field 1: Staff ID / Phone Number -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="identifier">
+            Staff ID or Registered Phone
+          </label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-on-surface-variant">
+<span class="material-symbols-outlined text-headline-sm" data-icon="badge">badge</span>
+</div>
+<input class="w-full h-12 pl-10 pr-4 bg-surface-container-lowest border border-outline-variant/70 rounded-lg font-body-md text-body-md text-on-surface placeholder-outline-variant focus:outline-none focus:ring-2 focus:ring-primary-container/20 focus:border-primary-container transition-colors" id="identifier" placeholder="e.g. CHW-7419 or +1 (555) 019-2831" required="" type="text" value="CHW-88204"/>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-label-md text-secondary" data-icon="info">info</span>
+            Use the primary identifier issued by your district supervisor.
+          </p>
+</div>
+<!-- Field 2: PIN / Secure Key -->
+<div>
+<div class="flex items-center justify-between mb-1">
+<label class="font-label-md text-label-md text-on-surface" for="passcode">
+              PIN or Clinical Password
+            </label>
+<a class="font-label-sm text-label-sm text-primary hover:underline" href="#reset">
+              Forgot PIN?
+            </a>
+</div>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-on-surface-variant">
+<span class="material-symbols-outlined text-headline-sm" data-icon="lock">lock</span>
+</div>
+<input class="w-full h-12 pl-10 pr-10 bg-surface-container-lowest border border-outline-variant/70 rounded-lg font-body-md text-body-md text-on-surface tracking-widest placeholder-outline-variant focus:outline-none focus:ring-2 focus:ring-primary-container/20 focus:border-primary-container transition-colors" id="passcode" placeholder="Enter 6-digit numeric PIN" required="" type="password" value="••••••••"/>
+<button aria-label="Toggle password visibility" class="absolute inset-y-0 right-0 pr-3 flex items-center text-on-surface-variant hover:text-primary transition-colors" onclick="togglePasswordVisibility()" type="button">
+<span class="material-symbols-outlined text-headline-sm" data-icon="visibility" id="eye-icon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Offline Field Mode Toggle Option -->
+<div class="pt-space-xs">
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low border border-outline-variant/40">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-headline-sm" data-icon="wifi_off">wifi_off</span>
+</div>
+<div>
+<span class="font-label-md text-label-md text-on-surface block leading-tight">Offline Field Mode</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Store triage queue locally without cell signal</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" id="offline-switch" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+<!-- Primary Action CTA Button -->
+<div class="pt-space-xs">
+<button class="w-full h-12 bg-secondary-container text-on-secondary-container hover:bg-secondary-fixed-dim active:scale-[0.99] transition-all font-label-lg text-label-lg font-bold rounded-lg shadow-sm flex items-center justify-center gap-space-sm focus:outline-none focus:ring-2 focus:ring-secondary/40" type="submit">
+<span>Enter Portal</span>
+<span class="material-symbols-outlined text-headline-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</form>
+<!-- Facility Node Info Footer inside card -->
+<div class="mt-space-md pt-space-sm border-t border-outline-variant/30 flex items-center justify-between text-on-surface-variant">
+<div class="flex items-center gap-1.5 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-label-md text-primary" data-icon="location_on">location_on</span>
+<span>District Node: <strong>Nairobi South Sector 4</strong></span>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-primary font-semibold">v2.4 Field-Ready</span>
+</div>
+</section>
+<!-- Bottom Secondary Support & Quick Links -->
+<div class="mt-space-md text-center space-y-space-xs">
+<div class="flex items-center justify-center gap-space-md text-on-surface-variant font-label-md text-label-md">
+<a class="flex items-center gap-1 hover:text-primary transition-colors" href="#help">
+<span class="material-symbols-outlined text-label-lg" data-icon="contact_support">contact_support</span>
+<span>Field Dispatch Helpline</span>
+</a>
+<span class="text-outline-variant">•</span>
+<a class="flex items-center gap-1 hover:text-primary transition-colors" href="#biometric">
+<span class="material-symbols-outlined text-label-lg" data-icon="fingerprint">fingerprint</span>
+<span>Use WebAuthn Token</span>
+</a>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        Protected by SETU End-to-End Cryptographic Envelope. Compliant with HIPAA &amp; MOH Community Protocols.
+      </p>
+</div>
+</main>
+<!-- Sticky Mobile / Bottom Notice Minimal Drawer -->
+<footer class="w-full max-w-7xl mx-auto px-space-md py-space-sm text-center">
+<p class="font-label-sm text-label-sm text-on-surface-variant">
+      SETU Tele-Health Network © 2025. All clinical telemetry synced with National Health Registry.
+    </p>
+</footer>
+<!-- Micro-interactions Script -->
+<script>
+    let activeRole = 'chw';
+
+    function selectRole(role) {
+      activeRole = role;
+      const chwBtn = document.getElementById('role-chw');
+      const clinicianBtn = document.getElementById('role-clinician');
+      const badge = document.getElementById('role-badge');
+      const idInput = document.getElementById('identifier');
+
+      if (role === 'chw') {
+        // CHW Active styling
+        chwBtn.className = "role-card text-left p-space-md rounded-xl border-2 border-primary-container bg-surface-container-low transition-all duration-150 relative cursor-pointer group";
+        chwBtn.setAttribute('aria-checked', 'true');
+        chwBtn.querySelector('.indicator-icon').className = "indicator-icon w-5 h-5 rounded-full bg-primary-container text-surface-container-lowest flex items-center justify-center opacity-100";
+        chwBtn.querySelector('.indicator-icon').innerHTML = '<span class="material-symbols-outlined text-label-sm" data-icon="check">check</span>';
+
+        // Clinician Inactive styling
+        clinicianBtn.className = "role-card text-left p-space-md rounded-xl border border-outline-variant/50 bg-surface-container-lowest hover:border-primary-container/40 transition-all duration-150 relative cursor-pointer group";
+        clinicianBtn.setAttribute('aria-checked', 'false');
+        clinicianBtn.querySelector('.indicator-icon').className = "indicator-icon w-5 h-5 rounded-full border border-outline-variant flex items-center justify-center opacity-0 group-hover:opacity-40";
+        clinicianBtn.querySelector('.indicator-icon').innerHTML = '<span class="material-symbols-outlined text-label-sm" data-icon="check">check</span>';
+
+        badge.textContent = "Front-line CHW";
+        idInput.value = "CHW-88204";
+        idInput.placeholder = "e.g. CHW-7419 or +1 (555) 019-2831";
+      } else {
+        // Clinician Active styling
+        clinicianBtn.className = "role-card text-left p-space-md rounded-xl border-2 border-primary-container bg-surface-container-low transition-all duration-150 relative cursor-pointer group";
+        clinicianBtn.setAttribute('aria-checked', 'true');
+        clinicianBtn.querySelector('.indicator-icon').className = "indicator-icon w-5 h-5 rounded-full bg-primary-container text-surface-container-lowest flex items-center justify-center opacity-100";
+        clinicianBtn.querySelector('.indicator-icon').innerHTML = '<span class="material-symbols-outlined text-label-sm" data-icon="check">check</span>';
+
+        // CHW Inactive styling
+        chwBtn.className = "role-card text-left p-space-md rounded-xl border border-outline-variant/50 bg-surface-container-lowest hover:border-primary-container/40 transition-all duration-150 relative cursor-pointer group";
+        chwBtn.setAttribute('aria-checked', 'false');
+        chwBtn.querySelector('.indicator-icon').className = "indicator-icon w-5 h-5 rounded-full border border-outline-variant flex items-center justify-center opacity-0 group-hover:opacity-40";
+        chwBtn.querySelector('.indicator-icon').innerHTML = '<span class="material-symbols-outlined text-label-sm" data-icon="check">check</span>';
+
+        badge.textContent = "Licensed Clinician";
+        idInput.value = "DR-VAL-4019";
+        idInput.placeholder = "e.g. MD-License # or Hospital ID";
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const pass = document.getElementById('passcode');
+      const icon = document.getElementById('eye-icon');
+      if (pass.type === 'password') {
+        pass.type = 'text';
+        icon.setAttribute('data-icon', 'visibility_off');
+        icon.textContent = 'visibility_off';
+      } else {
+        pass.type = 'password';
+        icon.setAttribute('data-icon', 'visibility');
+        icon.textContent = 'visibility';
+      }
+    }
+
+    function handlePortalAuth(e) {
+      e.preventDefault();
+      const isOffline = document.getElementById('offline-switch').checked;
+      const targetLabel = activeRole === 'chw' ? 'CHW Field Terminal' : 'Clinician Triage Desk';
+      alert(`Authenticated successfully to ${targetLabel}${isOffline ? ' (Offline Cache Active)' : ''}. Entering secure workspace...`);
+    }
+  </script>
+</body></html>

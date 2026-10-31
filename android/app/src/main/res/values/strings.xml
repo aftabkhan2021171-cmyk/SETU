@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SETU</string>
+    <string name="title_activity_main">SETU</string>
+    <string name="package_name">com.setu.app</string>
+    <string name="custom_url_scheme">com.setu.app</string>
+</resources>

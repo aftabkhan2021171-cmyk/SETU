@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SETU Triage - Patient Vitals Registration</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration verbatim -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "error": "#ba1a1a",
+            "surface-container": "#efeeea",
+            "on-tertiary-fixed": "#410002",
+            "surface-container-high": "#eae8e4",
+            "outline-variant": "#dac0c2",
+            "surface-bright": "#fbf9f5",
+            "primary-fixed": "#ffd9dd",
+            "on-tertiary-fixed-variant": "#93000b",
+            "on-secondary-fixed-variant": "#5a4300",
+            "on-tertiary-container": "#ff7d71",
+            "primary-fixed-dim": "#ffb2bc",
+            "tertiary-fixed": "#ffdad6",
+            "surface-container-low": "#f5f3ef",
+            "surface-variant": "#e4e2de",
+            "on-error-container": "#93000a",
+            "tertiary": "#520003",
+            "on-primary-fixed": "#400013",
+            "tertiary-container": "#7b0008",
+            "secondary": "#775a00",
+            "on-secondary": "#ffffff",
+            "primary-container": "#6b1d2f",
+            "background": "#fbf9f5",
+            "on-background": "#1b1c1a",
+            "surface-dim": "#dbdad6",
+            "primary": "#4e051a",
+            "on-error": "#ffffff",
+            "surface": "#fbf9f5",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#ee8495",
+            "on-secondary-container": "#735700",
+            "secondary-container": "#fece57",
+            "surface-container-highest": "#e4e2de",
+            "on-primary-fixed-variant": "#7c2a3b",
+            "on-surface-variant": "#544244",
+            "outline": "#877274",
+            "on-tertiary": "#ffffff",
+            "on-secondary-fixed": "#251a00",
+            "inverse-primary": "#ffb2bc",
+            "on-surface": "#1b1c1a",
+            "inverse-surface": "#30312e",
+            "surface-tint": "#9a4152",
+            "tertiary-fixed-dim": "#ffb4ab",
+            "inverse-on-surface": "#f2f0ed",
+            "surface-container-lowest": "#ffffff",
+            "secondary-fixed-dim": "#eec14b",
+            "secondary-fixed": "#ffdf98",
+            "error-container": "#ffdad6"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "space-md": "1rem",
+            "margin-tablet": "1.5rem",
+            "space-sm": "0.5rem",
+            "margin-desktop": "2rem",
+            "space-lg": "1.5rem",
+            "margin": "1rem",
+            "gutter": "1rem",
+            "gutter-tablet": "1.25rem",
+            "gutter-desktop": "1.5rem",
+            "space-xl": "2rem"
+          },
+          "fontFamily": {
+            "label-md": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "headline-xl": ["Plus Jakarta Sans"],
+            "metric-display": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-xl-mobile": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }],
+            "headline-lg-mobile": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+            "headline-xl": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "metric-display": ["32px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "headline-sm": ["18px", { "lineHeight": "26px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+            "headline-xl-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+            "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    /* Specific warm shadow token matching Level 1 elevation */
+    .card-editorial-shadow {
+      box-shadow: 0px 2px 8px rgba(107, 29, 47, 0.03), 0px 1px 3px rgba(0, 0, 0, 0.02);
+    }
+    .alert-elevation {
+      box-shadow: 0px 4px 12px rgba(220, 38, 38, 0.06);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col font-body-md text-body-md selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- Header Navigation: Task-focused view (Back navigation active, BottomNavBar suppressed per rule) -->
+<header class="sticky top-0 z-40 bg-surface shadow-sm transition-colors">
+<div class="max-w-4xl mx-auto px-space-md py-space-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<button aria-label="Go back" class="p-space-xs text-primary hover:bg-surface-container rounded-full transition-colors flex items-center justify-center" type="button">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" style="font-size: 14px;">home_health</span>
+            HOME VISIT FIELD FORM
+          </span>
+<h1 class="font-headline-sm text-headline-sm text-primary font-bold leading-tight">
+            Vitals Registration
+          </h1>
+</div>
+</div>
+<!-- Battery / Offline Sync Pill -->
+<div class="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-full border border-surface-container-high">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Field Offline-Ready</span>
+</div>
+</div>
+</header>
+<!-- Main Patient Dossier & Entry Form -->
+<main class="flex-1 max-w-4xl w-full mx-auto px-space-md py-space-md space-y-space-md">
+<!-- Patient Header Card -->
+<section class="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant/30 card-editorial-shadow relative overflow-hidden">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-start gap-space-sm">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined text-2xl">person</span>
+</div>
+<div>
+<div class="flex items-center gap-2 flex-wrap">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Ramesh Kumar</h2>
+<span class="font-label-md text-label-md px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant">ID: #CK-4091</span>
+</div>
+<div class="flex items-center gap-3 mt-1 text-on-surface-variant flex-wrap font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-base">cake</span>
+                Age 62
+              </span>
+<span>•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-base">location_on</span>
+                Village: Rampur North
+              </span>
+<span>•</span>
+<span class="font-label-sm text-label-sm text-error bg-error-container/40 px-2 py-0.5 rounded-full">
+                Hypertension Watchlist
+              </span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 self-start sm:self-center border-t sm:border-t-0 pt-2 sm:pt-0 w-full sm:w-auto justify-between sm:justify-end border-surface-container">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Last Checked: 14 Days Ago</span>
+</div>
+</div>
+</section>
+<!-- Registration Form Bento Section -->
+<form class="space-y-space-lg" onsubmit="event.preventDefault();">
+<!-- Vitals Entry Grid -->
+<section class="space-y-space-sm">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-sm text-headline-sm text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">vital_signs</span>
+            Clinical Readings
+          </h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">All physical metrics are field-validated</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Blood Pressure Card (With Alert Flagging for Elevated Discrepancy) -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl border-2 border-error alert-elevation transition-all">
+<div class="flex items-start justify-between mb-2">
+<div>
+<span class="font-label-md text-label-md text-error flex items-center gap-1.5 uppercase">
+<span class="material-symbols-outlined text-base" data-weight="fill" style="font-variation-settings: 'FILL' 1;">warning</span>
+                  Elevated Threshold
+                </span>
+<label class="font-headline-sm text-headline-sm text-primary block mt-0.5">Blood Pressure</label>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-1 rounded">mmHg</span>
+</div>
+<div class="grid grid-cols-2 gap-3 mt-3">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1" for="systolic">Systolic</label>
+<div class="relative">
+<input class="w-full h-12 bg-surface text-primary font-metric-display text-metric-display px-3 py-1 rounded-lg border border-outline-variant focus:border-primary-container focus:ring-0 text-center font-bold" id="systolic" type="number" value="150"/>
+</div>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant block mb-1" for="diastolic">Diastolic</label>
+<div class="relative">
+<input class="w-full h-12 bg-surface text-primary font-metric-display text-metric-display px-3 py-1 rounded-lg border border-outline-variant focus:border-primary-container focus:ring-0 text-center font-bold" id="diastolic" type="number" value="95"/>
+</div>
+</div>
+</div>
+<div class="mt-3 flex items-center justify-between pt-2 border-t border-surface-container">
+<span class="font-body-sm text-body-sm text-error font-medium">Stage 2 Hypertension range</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Target: &lt;130/80</span>
+</div>
+</div>
+<!-- Blood Glucose Card -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/30 card-editorial-shadow transition-all">
+<div class="flex items-start justify-between mb-2">
+<div>
+<span class="font-label-md text-label-md text-secondary flex items-center gap-1 uppercase">
+<span class="material-symbols-outlined text-base">water_drop</span>
+                  Glycemic Test
+                </span>
+<label class="font-headline-sm text-headline-sm text-primary block mt-0.5">Blood Glucose</label>
+</div>
+<div class="flex items-center gap-1 bg-surface-container p-0.5 rounded-lg">
+<button class="px-2 py-0.5 font-label-sm text-label-sm rounded bg-surface-container-lowest text-primary shadow-xs font-semibold" type="button">Random</button>
+<button class="px-2 py-0.5 font-label-sm text-label-sm rounded text-on-surface-variant hover:text-primary" type="button">Fasting</button>
+</div>
+</div>
+<div class="mt-3 flex items-center gap-3">
+<div class="relative flex-1">
+<input class="w-full h-12 bg-surface text-primary font-metric-display text-metric-display px-3 py-1 rounded-lg border border-outline-variant focus:border-primary-container focus:ring-0 text-center font-bold" id="glucose" type="number" value="182"/>
+</div>
+<span class="font-headline-sm text-headline-sm text-on-surface-variant font-medium">mg/dL</span>
+</div>
+<div class="mt-3 flex items-center justify-between pt-2 border-t border-surface-container">
+<span class="font-body-sm text-body-sm text-secondary font-medium">Postprandial elevation noted</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Normal: &lt;140</span>
+</div>
+</div>
+<!-- Pulse / Heart Rate Card -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/30 card-editorial-shadow transition-all">
+<div class="flex items-start justify-between mb-2">
+<div>
+<span class="font-label-md text-label-md text-primary-container flex items-center gap-1 uppercase">
+<span class="material-symbols-outlined text-base">favorite</span>
+                  Radial Pulse
+                </span>
+<label class="font-headline-sm text-headline-sm text-primary block mt-0.5">Heart Rate</label>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-1 rounded">bpm</span>
+</div>
+<div class="mt-3 flex items-center gap-3">
+<div class="relative flex-1">
+<input class="w-full h-12 bg-surface text-primary font-metric-display text-metric-display px-3 py-1 rounded-lg border border-outline-variant focus:border-primary-container focus:ring-0 text-center font-bold" id="pulse" type="number" value="84"/>
+</div>
+<span class="font-headline-sm text-headline-sm text-on-surface-variant font-medium">bpm</span>
+</div>
+<div class="mt-3 flex items-center justify-between pt-2 border-t border-surface-container">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Normal Sinus Rhythm</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Range: 60-100</span>
+</div>
+</div>
+<!-- Body Temperature Card -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/30 card-editorial-shadow transition-all">
+<div class="flex items-start justify-between mb-2">
+<div>
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1 uppercase">
+<span class="material-symbols-outlined text-base">thermostat</span>
+                  Digital Axillary
+                </span>
+<label class="font-headline-sm text-headline-sm text-primary block mt-0.5">Body Temperature</label>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-1 rounded">°F</span>
+</div>
+<div class="mt-3 flex items-center gap-3">
+<div class="relative flex-1">
+<input class="w-full h-12 bg-surface text-primary font-metric-display text-metric-display px-3 py-1 rounded-lg border border-outline-variant focus:border-primary-container focus:ring-0 text-center font-bold" id="temperature" step="0.1" type="number" value="98.6"/>
+</div>
+<span class="font-headline-sm text-headline-sm text-on-surface-variant font-medium">°F</span>
+</div>
+<div class="mt-3 flex items-center justify-between pt-2 border-t border-surface-container">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Afebrile (Normothermic)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Baseline: 98.6°F</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Field Observations & Quick Note Chips -->
+<section class="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/30 card-editorial-shadow space-y-space-sm">
+<div class="flex items-center justify-between">
+<label class="font-headline-sm text-headline-sm text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">notes</span>
+            Field Observations &amp; Symptoms
+          </label>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tap to tag notes</span>
+</div>
+<!-- Pre-populated Quick Chips -->
+<div class="flex flex-wrap gap-2 pt-1">
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-container text-white font-label-md text-label-md shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">check</span>
+            Mild dizziness
+          </button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary-container text-white font-label-md text-label-md shadow-sm" type="button">
+<span class="material-symbols-outlined text-base">check</span>
+            Missed morning medication
+          </button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-variant transition-colors font-label-md text-label-md" type="button">
+<span class="material-symbols-outlined text-base">add</span>
+            Pedal edema
+          </button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-variant transition-colors font-label-md text-label-md" type="button">
+<span class="material-symbols-outlined text-base">add</span>
+            Blurred vision
+          </button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-variant transition-colors font-label-md text-label-md" type="button">
+<span class="material-symbols-outlined text-base">add</span>
+            Adhering to diet
+          </button>
+</div>
+<!-- Custom Field Notes Input Area -->
+<div class="mt-3">
+<textarea class="w-full bg-surface border border-outline-variant/40 rounded-lg p-3 text-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary-container focus:ring-0" placeholder="Add additional contextual observations or caregiver remarks..." rows="2"></textarea>
+</div>
+</section>
+<!-- Worker ID Verification Badge -->
+<section class="bg-surface-container-low p-space-md rounded-xl border border-surface-container-highest flex items-center justify-between flex-wrap gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-xl">badge</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block uppercase tracking-wider">Clinician Handoff Origin</span>
+<p class="font-label-lg text-label-lg text-on-surface font-semibold">
+              Logged by CHW: Ananya Roy <span class="text-on-surface-variant font-normal">(ID: CHW-104)</span>
+</p>
+</div>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant font-label-sm text-label-sm bg-surface-container px-3 py-1 rounded-full">
+<span class="material-symbols-outlined text-sm text-secondary">verified_user</span>
+          Cryptographically Signed GPS Timestamp
+        </div>
+</section>
+<!-- Action Section: Emerald/Gold CTA Button -->
+<div class="pt-space-sm pb-space-xl">
+<button class="w-full h-14 bg-secondary-container hover:bg-secondary-fixed text-on-secondary-container font-headline-sm text-headline-sm font-bold rounded-xl shadow-md flex items-center justify-center gap-3 transition-transform active:scale-[0.99]" type="button">
+<span class="material-symbols-outlined text-2xl">sync_saved_locally</span>
+          Submit &amp; Sync Readings
+        </button>
+<p class="text-center font-label-sm text-label-sm text-on-surface-variant mt-2">
+          Syncs immediately to primary care clinician triage queue upon connectivity.
+        </p>
+</div>
+</form>
+</main>
+</body></html>

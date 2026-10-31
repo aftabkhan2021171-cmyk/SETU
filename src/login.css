@@ -1,0 +1,21 @@
+.lgn{min-height:100vh;background:var(--paper)}.lg-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 24px;max-width:640px;margin:0 auto}
+.lg-logo{display:flex;align-items:center;gap:12px}.lg-badge{width:44px;height:44px;border-radius:10px;background:var(--maroon);color:#fff;display:grid;place-items:center}.lg-name{font-weight:700;font-size:20px;color:var(--maroon);letter-spacing:.08em}
+.lg-chip{background:#efeeea;border-radius:20px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--grey);text-transform:uppercase;letter-spacing:.04em}
+.lg-main{max-width:640px;margin:0 auto;padding:8px 24px 32px;text-align:center}.lg-title{font-size:40px;font-weight:700;letter-spacing:.06em;color:var(--maroon);margin:12px 0 4px}.lg-sub{color:var(--grey);font-size:17px;margin:0 0 14px}
+.lg-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:20px;background:#efeeea66;padding:7px 16px;font-size:13px;font-weight:600;color:var(--ink)}
+.lg-card{text-align:left;background:#fff;border:1px solid var(--line);border-radius:12px;padding:28px;margin-top:24px;box-shadow:0 1px 3px #0001}
+.lg-row{display:flex;justify-content:space-between;align-items:center;gap:8px}.lg-cap{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.lg-role{color:var(--maroon);font-weight:700;font-size:13px}
+.lg-roles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 22px}
+.lg-rc{display:flex;flex-direction:column;gap:6px;text-align:left;padding:18px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;color:var(--ink);cursor:pointer;min-height:150px}
+.lg-rc b{font-size:18px;line-height:1.25;margin-top:6px}.lg-rc>span:last-child{color:var(--grey);font-size:13px}.lg-rc.on{border:2px solid var(--maroon);background:#f5f3ef;padding:17px}.lg-rc.on .lg-rc-top>svg:first-child{color:var(--maroon)}
+.lg-rc-top{display:flex;justify-content:space-between;align-items:center;color:var(--maroon)}.lg-tick{color:var(--maroon)}
+.lg-label{display:block;font-weight:700;font-size:15px;margin-bottom:8px}.lg-input{display:flex;align-items:center;gap:12px;height:54px;border:1px solid var(--line);border-radius:10px;padding:0 14px;background:#fff;color:var(--grey)}
+.lg-input:focus-within{outline:3px solid var(--gold);outline-offset:1px}.lg-input.bad{border-color:var(--red)}.lg-input input{border:0;height:100%;padding:0;flex:1;font-size:16px;background:none;outline:none}
+.lg-help{display:flex;gap:6px;align-items:flex-start;color:var(--grey);font-size:13px;margin:8px 0 0}.lg-help svg{margin-top:3px;flex:none;color:var(--gold)}
+.lg-link{background:none;border:0;color:var(--maroon);font:700 13px inherit;font-family:inherit;cursor:pointer;padding:4px 0}.lg-eye{background:none;border:0;color:var(--grey);cursor:pointer;display:grid;place-items:center;width:32px;height:32px}
+.lg-off{display:flex;align-items:center;gap:12px;background:#f5f3ef;border:1px solid var(--line);border-radius:10px;padding:14px;margin:20px 0}.lg-off>div{flex:1;display:flex;flex-direction:column;font-size:13px;color:var(--grey)}.lg-off b{color:var(--ink);font-size:14px}
+.lg-off-i{width:36px;height:36px;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--maroon)}
+.lg-sw{width:46px;height:26px;border-radius:13px;border:1px solid var(--line);background:#e4e2de;padding:2px;cursor:pointer;display:flex;flex:none}.lg-sw i{width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0003;transition:transform .12s}.lg-sw.on{background:var(--maroon)}.lg-sw.on i{transform:translateX(20px)}
+.btn.lg-go{width:100%;background:var(--gold);color:var(--ink);font-size:16px}.lg-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--line);margin-top:20px;padding-top:14px;font-size:13px;color:var(--grey)}
+.lg-foot span:first-child{display:flex;gap:6px;align-items:center}.lg-ver{background:#efeeea;border-radius:4px;padding:4px 10px;font-weight:700;font-size:12px}.lg-note{color:var(--grey);font-size:12px;margin-top:20px}
+@media(max-width:420px){.lg-card{padding:20px}.lg-roles{gap:8px}.lg-rc{padding:14px;min-height:140px}.lg-rc.on{padding:13px}.lg-rc b{font-size:16px}.lg-title{font-size:34px}}

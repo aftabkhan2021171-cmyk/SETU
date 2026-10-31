@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#672B36" />
+    <meta name="description" content="SETU offline-first healthcare workspace" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <title>SETU | Healthcare Workspace</title>
+    <script>
+      (function() {
+        function uuidv4() {
+          try {
+            if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+              var b = new Uint8Array(16);
+              window.crypto.getRandomValues(b);
+              b[6] = (b[6] & 0x0f) | 0x40;
+              b[8] = (b[8] & 0x3f) | 0x80;
+              var h = '';
+              for (var i = 0; i < 16; i++) {
+                var s = b[i].toString(16);
+                h += (s.length === 1 ? '0' : '') + s;
+              }
+              return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20, 32);
+            }
+          } catch (e) {}
+          return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+          });
+        }
+        try {
+          if (!window.crypto) window.crypto = {};
+          if (typeof window.crypto.randomUUID !== 'function') {
+            try {
+              Object.defineProperty(window.crypto, 'randomUUID', {
+                value: uuidv4,
+                writable: true,
+                configurable: true
+              });
+            } catch (e) {
+              window.crypto.randomUUID = uuidv4;
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
