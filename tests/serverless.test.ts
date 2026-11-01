@@ -144,4 +144,30 @@ describe('Vercel Serverless Backend API', () => {
     expect(getStatusCode()).toBe(422);
     expect(getData().error).toMatch(/checksum/i);
   });
+
+  it('handles Vercel rewrite URLs (/api?_route=...) accurately', async () => {
+    // 1. Health check via Vercel rewrite
+    const health = createMockReqRes({
+      method: 'GET',
+      url: '/api?_route=health'
+    });
+    await handler(health.req, health.res);
+    expect(health.getStatusCode()).toBe(200);
+    expect(health.getData()).toEqual({ status: 'UP' });
+
+    // 2. Auth login via Vercel rewrite
+    const login = createMockReqRes({
+      method: 'POST',
+      url: '/api?_route=auth/login',
+      body: {
+        staffId: 'chw1',
+        password: 'Test-Password-1',
+        deviceId: '00000000-0000-0000-0000-000000000002',
+        deviceName: 'Rewrite Test Device'
+      }
+    });
+    await handler(login.req, login.res);
+    expect(login.getStatusCode()).toBe(200);
+    expect(login.getData().accessToken).toBeDefined();
+  });
 });

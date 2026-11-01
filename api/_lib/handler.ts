@@ -35,9 +35,16 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: 'Database initialization failed', message: err.message });
     }
 
-    // Determine path accurately across Vercel catch-all, rewrites, and direct calls
+    // URL helper for search parameters
+    const searchParams = new URLSearchParams((req.url || '').split('?')[1] || '');
+
+    // Determine path accurately across Vercel rewrites (/api?_route=$1), catch-all, and direct calls
     let path = '';
-    if (req.query && Array.isArray(req.query.path)) {
+    const routeParam = req.query?._route || searchParams.get('_route');
+    if (routeParam && typeof routeParam === 'string') {
+      const cleanRoute = routeParam.replace(/^\/+/, '');
+      path = cleanRoute.startsWith('api/') ? `/${cleanRoute}` : `/api/${cleanRoute}`;
+    } else if (req.query && Array.isArray(req.query.path)) {
       path = '/api/' + req.query.path.join('/');
     } else if (typeof req.query?.path === 'string') {
       path = '/api/' + req.query.path;
@@ -60,9 +67,6 @@ export default async function handler(req: any, res: any) {
         req.body = JSON.parse(req.body);
       } catch { }
     }
-
-    // URL helper for search parameters
-    const searchParams = new URLSearchParams((req.url || '').split('?')[1] || '');
 
     // 1. Health check
     if (path === '/actuator/health' || path === '/api/health' || path === '/api/actuator/health') {

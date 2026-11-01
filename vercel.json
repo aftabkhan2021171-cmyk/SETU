@@ -4,11 +4,11 @@
   "rewrites": [
     {
       "source": "/actuator/(.*)",
-      "destination": "/api/health"
+      "destination": "/api?_route=health"
     },
     {
       "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "destination": "/api?_route=$1"
     },
     {
       "source": "/(.*)",
