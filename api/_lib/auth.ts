@@ -190,5 +190,3 @@ export async function logoutSession(refreshToken?: string): Promise<void> {
     }
   }
 }
-
-export { default } from './index';

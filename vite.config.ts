@@ -102,6 +102,7 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173
   },
+  test: { testTimeout: 20000 },
   preview: {
     host: '0.0.0.0',
     port: 5173

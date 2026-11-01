@@ -18,7 +18,7 @@ import {
   encryptServerField,
   decryptServerField,
   isServerEncryptionEnabled
-} from '../api/crypto';
+} from '../api/_lib/crypto';
 
 describe('Phase 1.2: Local Encryption At Rest & Resumable Migration', () => {
   let db: SetuDatabase;

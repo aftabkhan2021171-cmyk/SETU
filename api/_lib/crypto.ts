@@ -93,5 +93,3 @@ export function decryptServerField(value: string | null | undefined): string {
     return value; // Fallback to raw value on decryption error
   }
 }
-
-export { default } from './index';
