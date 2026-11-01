@@ -1,16 +1,25 @@
 /**
- * WebCrypto-based encryption and key derivation.
+ * WebCrypto & @noble/ciphers based authenticated encryption (AES-256-GCM).
  * PBKDF2 (>=310,000 iterations) + AES-GCM 256-bit encryption in Secure Contexts.
- * Seamless CryptoJS fallback in Insecure Contexts (e.g. mobile browser accessing plain HTTP LAN IP).
- * Zero custom crypto.
+ * Seamless @noble/ciphers/aes GCM + @noble/hashes PBKDF2 fallback in Insecure Contexts (e.g. mobile HTTP).
+ * Zero custom crypto. No hardcoded fallback keys. Authenticated cipher rejects tampered data.
  */
 
-import CryptoJS from 'crypto-js';
+import { gcm } from '@noble/ciphers/aes';
+import { pbkdf2 } from '@noble/hashes/pbkdf2';
+import { sha256 } from '@noble/hashes/sha256';
 
-const PBKDF2_ITERATIONS = 310000;
-const VERIFIER_PLAINTEXT = 'SETU_KEY_VERIFIER_V1';
+export const PBKDF2_ITERATIONS = 310000;
+export const VERIFIER_PLAINTEXT = 'SETU_KEY_VERIFIER_V1';
 
-export type AnyKey = CryptoKey | { isFallback: true; rawKey: CryptoJS.lib.WordArray };
+export interface SetuKey {
+  keyBytes: Uint8Array; // 32 bytes (256-bit)
+  webCryptoKey?: CryptoKey;
+  keyId?: string;
+  isFallback?: boolean; // backwards compatibility flag
+}
+
+export type AnyKey = CryptoKey | SetuKey | { isFallback: true; rawKey?: any; keyBytes?: Uint8Array };
 
 export function arrayBufferToHex(buffer: ArrayBuffer | Uint8Array): string {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
@@ -28,43 +37,76 @@ export function hexToArrayBuffer(hex: string): Uint8Array {
 export function generateSalt(): string {
   const salt = new Uint8Array(16);
   if (typeof globalThis !== 'undefined' && globalThis.crypto?.getRandomValues) {
-    try {
-      globalThis.crypto.getRandomValues(salt);
-      return arrayBufferToHex(salt);
-    } catch { }
+    globalThis.crypto.getRandomValues(salt);
+  } else {
+    for (let i = 0; i < 16; i++) salt[i] = Math.floor(Math.random() * 256);
   }
-  const randomWords = CryptoJS.lib.WordArray.random(16);
-  return randomWords.toString(CryptoJS.enc.Hex);
+  return arrayBufferToHex(salt);
 }
 
 export function generateIv(): string {
-  const iv = new Uint8Array(12); // Standard 96-bit IV for AES-GCM
+  const iv = new Uint8Array(12); // Standard 96-bit nonce for AES-GCM
   if (typeof globalThis !== 'undefined' && globalThis.crypto?.getRandomValues) {
-    try {
-      globalThis.crypto.getRandomValues(iv);
-      return arrayBufferToHex(iv);
-    } catch { }
+    globalThis.crypto.getRandomValues(iv);
+  } else {
+    for (let i = 0; i < 12; i++) iv[i] = Math.floor(Math.random() * 256);
   }
-  const randomWords = CryptoJS.lib.WordArray.random(12);
-  return randomWords.toString(CryptoJS.enc.Hex);
+  return arrayBufferToHex(iv);
 }
 
-export async function deriveKeyFromPin(pin: string, saltHex: string): Promise<AnyKey> {
+/**
+ * Generates a random 256-bit Data Encryption Key (DEK).
+ */
+export async function generateDataKey(keyId = 'dek-v1'): Promise<SetuKey> {
+  const keyBytes = new Uint8Array(32);
+  if (typeof globalThis !== 'undefined' && globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(keyBytes);
+  } else {
+    for (let i = 0; i < 32; i++) keyBytes[i] = Math.floor(Math.random() * 256);
+  }
+
+  let webCryptoKey: CryptoKey | undefined;
   if (typeof globalThis !== 'undefined' && globalThis.crypto?.subtle?.importKey) {
     try {
-      const enc = new TextEncoder();
-      const pinData = enc.encode(pin);
-      const salt = hexToArrayBuffer(saltHex);
+      webCryptoKey = await globalThis.crypto.subtle.importKey(
+        'raw',
+        keyBytes as any,
+        { name: 'AES-GCM', length: 256 },
+        true,
+        ['encrypt', 'decrypt']
+      );
+    } catch { }
+  }
 
+  return {
+    keyBytes,
+    webCryptoKey,
+    keyId
+  };
+}
+
+/**
+ * Derives a 256-bit Key Encryption Key (KEK) from a PIN and salt using PBKDF2 >= 310,000 iterations.
+ */
+export async function deriveKeyFromPin(pin: string, saltHex: string): Promise<SetuKey> {
+  const salt = hexToArrayBuffer(saltHex);
+  const enc = new TextEncoder();
+  const pinBytes = enc.encode(pin);
+
+  let keyBytes: Uint8Array;
+  let webCryptoKey: CryptoKey | undefined;
+
+  if (typeof globalThis !== 'undefined' && globalThis.crypto?.subtle?.deriveBits) {
+    try {
       const keyMaterial = await globalThis.crypto.subtle.importKey(
         'raw',
-        pinData,
+        pinBytes,
         { name: 'PBKDF2' },
         false,
-        ['deriveKey']
+        ['deriveBits', 'deriveKey']
       );
 
-      return await globalThis.crypto.subtle.deriveKey(
+      const bits = await globalThis.crypto.subtle.deriveBits(
         {
           name: 'PBKDF2',
           salt: salt as any,
@@ -72,23 +114,75 @@ export async function deriveKeyFromPin(pin: string, saltHex: string): Promise<An
           hash: 'SHA-256'
         },
         keyMaterial,
+        256
+      );
+
+      keyBytes = new Uint8Array(bits);
+      webCryptoKey = await globalThis.crypto.subtle.importKey(
+        'raw',
+        keyBytes as any,
         { name: 'AES-GCM', length: 256 },
         false,
         ['encrypt', 'decrypt']
       );
+
+      return { keyBytes, webCryptoKey, isFallback: false };
     } catch (e) {
-      console.warn('Native WebCrypto deriveKey failed, falling back to CryptoJS:', e);
+      console.warn('Native WebCrypto deriveKey failed, using @noble/hashes PBKDF2 fallback:', e);
     }
   }
 
-  // Fallback for Insecure Contexts (HTTP on mobile devices)
-  const saltWords = CryptoJS.enc.Hex.parse(saltHex);
-  const derived = CryptoJS.PBKDF2(pin, saltWords, {
-    keySize: 256 / 32,
-    iterations: 10000,
-    hasher: CryptoJS.algo.SHA256
-  });
-  return { isFallback: true, rawKey: derived };
+  // Audited noble fallback for Insecure Contexts (mobile HTTP LAN)
+  keyBytes = pbkdf2(sha256, pinBytes, salt, { c: PBKDF2_ITERATIONS, dkLen: 32 });
+  return { keyBytes, isFallback: true };
+}
+
+/**
+ * Wraps (encrypts) the Data Encryption Key (DEK) with the Key Encryption Key (KEK).
+ */
+export async function wrapDataKey(dek: SetuKey, kek: SetuKey): Promise<{ wrappedDekCipher: string; wrappedDekIv: string }> {
+  const enc = await encryptBytes(dek.keyBytes, kek);
+  return {
+    wrappedDekCipher: enc.ciphertext,
+    wrappedDekIv: enc.iv
+  };
+}
+
+/**
+ * Unwraps (decrypts) the Data Encryption Key (DEK) using the Key Encryption Key (KEK).
+ */
+export async function unwrapDataKey(
+  wrappedDekCipher: string,
+  wrappedDekIv: string,
+  kek: SetuKey,
+  keyId = 'dek-v1'
+): Promise<SetuKey> {
+  const keyBytes = await decryptBytes(wrappedDekCipher, wrappedDekIv, kek);
+  if (keyBytes.length !== 32) {
+    throw new Error(`Invalid unwrapped DEK length: expected 32 bytes, got ${keyBytes.length}`);
+  }
+
+  let webCryptoKey: CryptoKey | undefined;
+  if (typeof globalThis !== 'undefined' && globalThis.crypto?.subtle?.importKey) {
+    try {
+      webCryptoKey = await globalThis.crypto.subtle.importKey(
+        'raw',
+        keyBytes as any,
+        { name: 'AES-GCM', length: 256 },
+        true,
+        ['encrypt', 'decrypt']
+      );
+    } catch { }
+  }
+
+  return { keyBytes, webCryptoKey, keyId };
+}
+
+/**
+ * Re-wraps the DEK with a new KEK when the user changes their PIN.
+ */
+export async function rewrapDataKey(dek: SetuKey, newKek: SetuKey): Promise<{ wrappedDekCipher: string; wrappedDekIv: string }> {
+  return wrapDataKey(dek, newKek);
 }
 
 export async function createVerifier(key: AnyKey): Promise<{ verifierCipher: string; verifierIv: string }> {
@@ -105,78 +199,87 @@ export async function verifyKey(key: AnyKey, verifierCipher: string, verifierIv:
   }
 }
 
-export async function encryptString(plaintext: string, key: AnyKey): Promise<{ ciphertext: string; iv: string }> {
+/**
+ * Extracts raw 32-byte key buffer from SetuKey or CryptoKey.
+ */
+async function getKeyBytes(key: AnyKey): Promise<Uint8Array> {
+  if ('keyBytes' in key && key.keyBytes) {
+    return key.keyBytes;
+  }
+  if ('rawKey' in key && key.rawKey instanceof Uint8Array) {
+    return key.rawKey;
+  }
+  if (key instanceof CryptoKey || ('webCryptoKey' in key && key.webCryptoKey)) {
+    const cryptoKey = key instanceof CryptoKey ? key : key.webCryptoKey!;
+    if (globalThis.crypto?.subtle?.exportKey) {
+      try {
+        const raw = await globalThis.crypto.subtle.exportKey('raw', cryptoKey);
+        return new Uint8Array(raw);
+      } catch { }
+    }
+  }
+  throw new Error('Unable to extract raw key bytes from key');
+}
+
+export async function encryptBytes(data: Uint8Array, key: AnyKey): Promise<{ ciphertext: string; iv: string }> {
   const ivHex = generateIv();
+  const iv = hexToArrayBuffer(ivHex);
 
-  if (!('isFallback' in key) && typeof globalThis !== 'undefined' && globalThis.crypto?.subtle?.encrypt) {
+  const cryptoKey = key instanceof CryptoKey ? key : ('webCryptoKey' in key ? key.webCryptoKey : undefined);
+  if (cryptoKey && typeof globalThis !== 'undefined' && globalThis.crypto?.subtle?.encrypt) {
     try {
-      const enc = new TextEncoder();
-      const iv = hexToArrayBuffer(ivHex);
-      const data = enc.encode(plaintext);
-
       const encrypted = await globalThis.crypto.subtle.encrypt(
         { name: 'AES-GCM', iv: iv as any },
-        key,
+        cryptoKey,
         data as any
       );
-
       return {
         ciphertext: arrayBufferToHex(encrypted),
         iv: ivHex
       };
-    } catch (e) {
-      console.warn('Native WebCrypto encrypt failed, falling back to CryptoJS:', e);
-    }
+    } catch { }
   }
 
-  // Fallback for Insecure Contexts (CryptoJS AES-CBC)
-  const ivWords = CryptoJS.enc.Hex.parse(ivHex);
-  const rawKey = 'isFallback' in key ? key.rawKey : CryptoJS.enc.Utf8.parse('SETU_FALLBACK_KEY_SECURE');
-  const encrypted = CryptoJS.AES.encrypt(plaintext, rawKey, {
-    iv: ivWords,
-    mode: CryptoJS.mode.CBC,
-    padding: CryptoJS.pad.Pkcs7
-  });
-
+  // Audited @noble/ciphers AES-256-GCM fallback (authenticated, tampered tag rejected)
+  const rawKey = await getKeyBytes(key);
+  const cipher = gcm(rawKey, iv);
+  const encrypted = cipher.encrypt(data);
   return {
-    ciphertext: encrypted.ciphertext.toString(CryptoJS.enc.Hex),
+    ciphertext: arrayBufferToHex(encrypted),
     iv: ivHex
   };
 }
 
-export async function decryptString(ciphertextHex: string, ivHex: string, key: AnyKey): Promise<string> {
-  if (!('isFallback' in key) && typeof globalThis !== 'undefined' && globalThis.crypto?.subtle?.decrypt) {
-    try {
-      const dec = new TextDecoder();
-      const iv = hexToArrayBuffer(ivHex);
-      const data = hexToArrayBuffer(ciphertextHex);
+export async function decryptBytes(ciphertextHex: string, ivHex: string, key: AnyKey): Promise<Uint8Array> {
+  const iv = hexToArrayBuffer(ivHex);
+  const ciphertext = hexToArrayBuffer(ciphertextHex);
 
+  const cryptoKey = key instanceof CryptoKey ? key : ('webCryptoKey' in key ? key.webCryptoKey : undefined);
+  if (cryptoKey && typeof globalThis !== 'undefined' && globalThis.crypto?.subtle?.decrypt) {
+    try {
       const decrypted = await globalThis.crypto.subtle.decrypt(
         { name: 'AES-GCM', iv: iv as any },
-        key,
-        data as any
+        cryptoKey,
+        ciphertext as any
       );
-
-      return dec.decode(decrypted);
-    } catch (e) {
-      // If WebCrypto decryption failed, attempt fallback decryption
-    }
+      return new Uint8Array(decrypted);
+    } catch { }
   }
 
-  // Fallback decryption (CryptoJS AES-CBC)
-  const ivWords = CryptoJS.enc.Hex.parse(ivHex);
-  const rawKey = 'isFallback' in key ? key.rawKey : CryptoJS.enc.Utf8.parse('SETU_FALLBACK_KEY_SECURE');
-  const cipherParams = CryptoJS.lib.CipherParams.create({
-    ciphertext: CryptoJS.enc.Hex.parse(ciphertextHex)
-  });
+  // Audited @noble/ciphers AES-256-GCM fallback
+  const rawKey = await getKeyBytes(key);
+  const cipher = gcm(rawKey, iv);
+  // throws if tag is invalid or tampered
+  return cipher.decrypt(ciphertext);
+}
 
-  const decrypted = CryptoJS.AES.decrypt(cipherParams, rawKey, {
-    iv: ivWords,
-    mode: CryptoJS.mode.CBC,
-    padding: CryptoJS.pad.Pkcs7
-  });
+export async function encryptString(plaintext: string, key: AnyKey): Promise<{ ciphertext: string; iv: string }> {
+  const enc = new TextEncoder();
+  return encryptBytes(enc.encode(plaintext), key);
+}
 
-  const result = decrypted.toString(CryptoJS.enc.Utf8);
-  if (!result) throw new Error('Decryption failed');
-  return result;
+export async function decryptString(ciphertextHex: string, ivHex: string, key: AnyKey): Promise<string> {
+  const bytes = await decryptBytes(ciphertextHex, ivHex, key);
+  const dec = new TextDecoder();
+  return dec.decode(bytes);
 }
