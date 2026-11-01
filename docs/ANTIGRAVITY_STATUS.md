@@ -14,13 +14,13 @@
 ---
 
 ## Phase 1 – Encryption at Rest (AES-256-GCM) + Local PIN
-- [ ] **1.1 Key hierarchy**: Random 256-bit DEK wrapped by PIN-derived key (PBKDF2 $\ge$ 310k iter). Re-wrapping DEK on PIN change.
-- [ ] **1.2 Encrypt at rest**: `events.payload`, patient names/locality/customFields, vital values. Background migration via `db.version(2)`.
-- [ ] **1.3 WebCrypto + @noble fallback**: AES-256-GCM fallback for insecure contexts without hardcoded keys. Tamper-rejection tests.
-- [ ] **1.4 Secure restorePersistentSession**: Eliminate literal derivation; prompt PIN unlock if key is evicted from memory.
-- [ ] **1.5 Demo mode guard**: Demo accounts enabled only when `VITE_DEMO_MODE !== "false"`.
-- [ ] **1.6 Local PIN lock screen**: Auto-lock on inactivity (default 5 min), lock on app background (Capacitor App), exponential attempt back-off.
-- [ ] **1.7 Server-side SQL + AES-256**: Encrypt PostgreSQL columns with AES-256-GCM using `SETU_DATA_KEY`.
+- [x] **1.1 Key hierarchy**: Random 256-bit DEK wrapped by PIN-derived key (PBKDF2 $\ge$ 310k iter). Re-wrapping DEK on PIN change.
+- [x] **1.2 Encrypt at rest**: `events.payload`, patient names/locality/customFields, vital values. Background migration via `db.version(2)`.
+- [x] **1.3 WebCrypto + @noble fallback**: AES-256-GCM fallback for insecure contexts without hardcoded keys. Tamper-rejection tests.
+- [x] **1.4 Secure restorePersistentSession**: Eliminate literal derivation; prompt PIN unlock if key is evicted from memory.
+- [x] **1.5 Demo mode guard**: Demo accounts enabled only when `VITE_DEMO_MODE !== "false"`.
+- [x] **1.6 Local PIN lock screen**: Auto-lock on inactivity (default 5 min), lock on app background (Capacitor App), exponential attempt back-off.
+- [x] **1.7 Server-side SQL + AES-256**: Encrypt PostgreSQL columns with AES-256-GCM using `SETU_DATA_KEY`.
 - [ ] **1.8 (Optional) SQLCipher**: For Android local database (pending approval).
 
 ---

@@ -7,3 +7,4 @@ export * from './projector';
 export * from './rebuild';
 export * from './auth';
 export * from './sync';
+export * from './encryption_at_rest';

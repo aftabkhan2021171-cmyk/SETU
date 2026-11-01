@@ -1,7 +1,7 @@
 /**
  * Authentication & Offline Unlock Engine for SETU.
- * Real backend auth with rotating tokens, encrypted storage at rest (AES-GCM + PBKDF2),
- * and secure offline PIN unlocking.
+ * Real backend auth with rotating tokens, encrypted storage at rest (AES-256-GCM + PBKDF2),
+ * key hierarchy (DEK wrapped by PIN-derived KEK), inactivity auto-lock, and secure offline unlocking.
  */
 
 import { db } from './db';
@@ -9,13 +9,17 @@ import { generateUUID } from './uuid';
 import {
   generateSalt,
   deriveKeyFromPin,
+  generateDataKey,
+  wrapDataKey,
+  unwrapDataKey,
+  rewrapDataKey,
   createVerifier,
   verifyKey,
   encryptString,
   decryptString,
-  AnyKey
+  AnyKey,
+  SetuKey
 } from './crypto';
-import CryptoJS from 'crypto-js';
 
 export interface AuthUser {
   id: string;
@@ -29,8 +33,9 @@ export interface Session {
   user: AuthUser;
   accessToken: string;
   refreshToken: string;
-  cryptoKey: AnyKey;
+  cryptoKey: SetuKey | null;
   isOfflineUnlock: boolean;
+  isLocked?: boolean;
 }
 
 export const SEEDED_OFFLINE_USERS: Record<string, { user: AuthUser; pin: string }> = {
@@ -53,7 +58,6 @@ export const SEEDED_OFFLINE_USERS: Record<string, { user: AuthUser; pin: string 
 };
 
 const PERSISTENT_SESSION_KEY = 'setu_persistent_session';
-const DEFAULT_API_URL = 'http://localhost:8080';
 
 class MemoryStorage {
   private store = new Map<string, string>();
@@ -70,6 +74,87 @@ export function getStorage(): { getItem(k: string): string | null; setItem(k: st
     if (typeof window !== 'undefined' && window.localStorage) return window.localStorage;
   } catch { }
   return memoryFallback;
+}
+
+export const isDemoMode = (): boolean => {
+  return (import.meta as any).env?.VITE_DEMO_MODE !== 'false';
+};
+
+let activeSession: Session | null = null;
+let lastActivityTime = Date.now();
+let inactivityTimeoutMs = 5 * 60 * 1000; // Default 5 minutes
+let failedUnlockAttempts = 0;
+let lockCooldownUntil = 0;
+
+// Lock event listeners
+type LockListener = (locked: boolean) => void;
+const lockListeners = new Set<LockListener>();
+
+export function subscribeLockState(fn: LockListener): () => void {
+  lockListeners.add(fn);
+  fn(isSessionLocked());
+  return () => lockListeners.delete(fn);
+}
+
+function notifyLockState(): void {
+  const locked = isSessionLocked();
+  for (const fn of lockListeners) {
+    try { fn(locked); } catch { }
+  }
+}
+
+export function touchActivity(): void {
+  lastActivityTime = Date.now();
+}
+
+export function setInactivityTimeout(ms: number): void {
+  inactivityTimeoutMs = ms;
+}
+
+export function isSessionLocked(): boolean {
+  if (!activeSession) return false;
+  return !!activeSession.isLocked || !activeSession.cryptoKey;
+}
+
+export function getLockCooldownRemainingSeconds(): number {
+  const now = Date.now();
+  if (now >= lockCooldownUntil) return 0;
+  return Math.ceil((lockCooldownUntil - now) / 1000);
+}
+
+export function resetLockCooldownForTesting(): void {
+  failedUnlockAttempts = 0;
+  lockCooldownUntil = 0;
+}
+
+export function lockSession(): void {
+  if (activeSession) {
+    activeSession.cryptoKey = null; // Evict cryptographic DEK from memory
+    activeSession.isLocked = true;
+    notifyLockState();
+  }
+}
+
+// Inactivity timer check (runs every 10 seconds in browser)
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    if (activeSession && !isSessionLocked()) {
+      if (Date.now() - lastActivityTime > inactivityTimeoutMs) {
+        lockSession();
+      }
+    }
+  }, 10000);
+
+  // Background lock via Capacitor App plugin if available
+  try {
+    import('@capacitor/app').then(({ App }) => {
+      App.addListener('appStateChange', (state) => {
+        if (!state.isActive) {
+          lockSession();
+        }
+      });
+    }).catch(() => {});
+  } catch { }
 }
 
 export function savePersistentSession(session: Session): void {
@@ -106,14 +191,19 @@ export function restoreSyncSession(parsed: any): Session {
     user: parsed.user,
     accessToken: parsed.accessToken || '',
     refreshToken: parsed.refreshToken || '',
-    cryptoKey: { isFallback: true, rawKey: CryptoJS.enc.Utf8.parse('SETU_FALLBACK_KEY_SECURE') },
-    isOfflineUnlock: parsed.isOfflineUnlock ?? true
+    cryptoKey: null,
+    isOfflineUnlock: parsed.isOfflineUnlock ?? true,
+    isLocked: true // Requires PIN unlock to populate DEK
   };
   activeSession = session;
-  lastActivityTime = Date.now();
+  touchActivity();
   return session;
 }
 
+/**
+ * Task 1.4: Secure restorePersistentSession.
+ * Never derives key from a literal. If DEK is not in memory, marks session locked so PIN screen is shown.
+ */
 export async function restorePersistentSession(): Promise<Session | null> {
   if (activeSession) return activeSession;
   try {
@@ -122,21 +212,16 @@ export async function restorePersistentSession(): Promise<Session | null> {
       const parsed = JSON.parse(stored);
       const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
       if (parsed.user && parsed.savedAt && (Date.now() - parsed.savedAt) < thirtyDaysMs) {
-        let cryptoKey: AnyKey = { isFallback: true, rawKey: CryptoJS.enc.Utf8.parse('SETU_FALLBACK_KEY_SECURE') };
-        const saltMeta = await db.meta.get('crypto_salt');
-        if (saltMeta?.value) {
-          try {
-            cryptoKey = await deriveKeyFromPin('Test-Password-1', saltMeta.value);
-          } catch { }
-        }
         activeSession = {
           user: parsed.user,
           accessToken: parsed.accessToken || '',
           refreshToken: parsed.refreshToken || '',
-          cryptoKey,
-          isOfflineUnlock: parsed.isOfflineUnlock ?? true
+          cryptoKey: null, // DEK evicted: requires PIN
+          isOfflineUnlock: parsed.isOfflineUnlock ?? true,
+          isLocked: true
         };
-        lastActivityTime = Date.now();
+        touchActivity();
+        notifyLockState();
         return activeSession;
       }
     }
@@ -149,62 +234,168 @@ export async function restorePersistentSession(): Promise<Session | null> {
 export async function getApiBaseUrl(): Promise<string> {
   const meta = await db.meta.get('api_base_url');
   if (meta && meta.value) {
-    // If stored meta points to localhost but current device is on an external LAN IP, ignore stale localhost
     if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' && meta.value.includes('localhost')) {
       // Discard stale localhost setting
     } else {
       return meta.value;
     }
   }
-  // If Vite env variable is set:
   if ((import.meta as any).env?.VITE_API_BASE_URL) return (import.meta as any).env.VITE_API_BASE_URL;
 
-  // In web browsers (both laptop and mobile): return "" so requests use Vite's built-in /api reverse proxy
-  // This guarantees zero CORS issues, bypasses port 8080 firewall limits, and works everywhere seamlessly!
   if (typeof window !== 'undefined' && window.location) {
     if (window.location.protocol === 'capacitor:' || (window as any).Capacitor?.isNativePlatform?.()) {
       return 'http://10.0.2.2:8080';
     }
     return '';
   }
-
-  return DEFAULT_API_URL;
+  return '';
 }
 
 export async function setApiBaseUrl(url: string): Promise<void> {
-  await db.meta.put({ key: 'api_base_url', value: url.replace(/\/+$/, '') });
+  await db.meta.put({ key: 'api_base_url', value: url.trim().replace(/\/+$/, '') });
 }
 
 export async function getOrCreateDeviceId(): Promise<string> {
-  const existing = await db.meta.get('device_id');
-  if (existing && existing.value) return existing.value;
+  const meta = await db.meta.get('device_id');
+  if (meta && meta.value) return meta.value;
   const newId = generateUUID();
   await db.meta.put({ key: 'device_id', value: newId });
   return newId;
 }
 
-let activeSession: Session | null = null;
-let lastActivityTime = Date.now();
-let lockTimeoutMs = 30 * 24 * 60 * 60 * 1000; // 30-day persistent session for durable mobile field use
-let failedOfflineAttempts = 0;
-
-export function getActiveSession(): Session | null {
-  // Check inactivity auto-lock (30 days)
-  if (activeSession && Date.now() - lastActivityTime > lockTimeoutMs) {
-    activeSession = null;
+/**
+ * Task 1.1: Ensure DEK exists and is wrapped by KEK.
+ */
+async function ensureDataKey(kek: SetuKey): Promise<SetuKey> {
+  const wrappedMeta = await db.meta.get('wrapped_dek');
+  if (wrappedMeta?.value) {
     try {
-      getStorage().removeItem(PERSISTENT_SESSION_KEY);
-    } catch { }
+      return await unwrapDataKey(
+        wrappedMeta.value.wrappedDekCipher,
+        wrappedMeta.value.wrappedDekIv,
+        kek,
+        'dek-v1'
+      );
+    } catch (e) {
+      console.error('Failed to unwrap existing DEK with provided KEK:', e);
+      throw new Error('Invalid PIN: cryptographic key unwrapping failed.');
+    }
   }
-  return activeSession;
+
+  // First time on this device: generate a new random 256-bit DEK and wrap it
+  const dek = await generateDataKey('dek-v1');
+  const wrapped = await wrapDataKey(dek, kek);
+  await db.meta.put({ key: 'wrapped_dek', value: wrapped });
+  return dek;
 }
 
-export function touchActivity(): void {
-  lastActivityTime = Date.now();
+/**
+ * Unlocks the session using PIN (Task 1.6: exponential back-off + DEK unwrapping).
+ */
+export async function unlockSessionWithPin(pin: string): Promise<AuthUser> {
+  touchActivity();
+  const remainingCooldown = getLockCooldownRemainingSeconds();
+  if (remainingCooldown > 0) {
+    throw new Error(`Device temporarily locked due to failed attempts. Please wait ${remainingCooldown}s.`);
+  }
+
+  const saltMeta = await db.meta.get('crypto_salt');
+  const verifierMeta = await db.meta.get('crypto_verifier');
+
+  if (!saltMeta || !verifierMeta) {
+    // If demo mode is active and user is seeded
+    if (isDemoMode() && activeSession?.user?.staffId) {
+      const seed = SEEDED_OFFLINE_USERS[activeSession.user.staffId.toLowerCase()];
+      if (seed && pin === seed.pin) {
+        const saltHex = generateSalt();
+        await db.meta.put({ key: 'crypto_salt', value: saltHex });
+        const kek = await deriveKeyFromPin(pin, saltHex);
+        const verifier = await createVerifier(kek);
+        await db.meta.put({ key: 'crypto_verifier', value: verifier });
+        const dek = await ensureDataKey(kek);
+        activeSession.cryptoKey = dek;
+        activeSession.isLocked = false;
+        failedUnlockAttempts = 0;
+        notifyLockState();
+        return activeSession.user;
+      }
+    }
+    throw new Error('No cryptographic verifier found on device.');
+  }
+
+  const kek = await deriveKeyFromPin(pin, saltMeta.value);
+  const valid = await verifyKey(kek, verifierMeta.value.verifierCipher, verifierMeta.value.verifierIv);
+
+  if (!valid) {
+    failedUnlockAttempts++;
+    // Exponential backoff: 1s, 2s, 4s, 8s... capped at 300s (5 min)
+    const backoffSeconds = Math.min(300, Math.pow(2, failedUnlockAttempts - 1));
+    lockCooldownUntil = Date.now() + backoffSeconds * 1000;
+    throw new Error(`Invalid PIN. Cooldown: ${backoffSeconds}s.`);
+  }
+
+  // PIN is valid: unwrap the DEK
+  const dek = await ensureDataKey(kek);
+  failedUnlockAttempts = 0;
+  lockCooldownUntil = 0;
+
+  if (activeSession) {
+    activeSession.cryptoKey = dek;
+    activeSession.isLocked = false;
+    notifyLockState();
+    return activeSession.user;
+  }
+
+  const user = getStoredSessionUser() || {
+    id: 'U-UNKNOWN',
+    staffId: 'user',
+    name: 'Healthcare Worker',
+    role: 'CHW',
+    district: 'Ludhiana'
+  };
+  activeSession = {
+    user,
+    accessToken: '',
+    refreshToken: '',
+    cryptoKey: dek,
+    isOfflineUnlock: true,
+    isLocked: false
+  };
+  notifyLockState();
+  return user;
 }
 
-export function lockApp(): void {
-  activeSession = null;
+/**
+ * Task 1.1: Re-wraps the DEK with a new PIN without re-encrypting patient data.
+ */
+export async function changeUserPin(currentPin: string, newPin: string): Promise<boolean> {
+  const saltMeta = await db.meta.get('crypto_salt');
+  const verifierMeta = await db.meta.get('crypto_verifier');
+  if (!saltMeta || !verifierMeta) throw new Error('Cannot change PIN: no credentials configured.');
+
+  const currentKek = await deriveKeyFromPin(currentPin, saltMeta.value);
+  const valid = await verifyKey(currentKek, verifierMeta.value.verifierCipher, verifierMeta.value.verifierIv);
+  if (!valid) throw new Error('Current PIN is incorrect.');
+
+  // Unwrap current DEK
+  const currentDek = await ensureDataKey(currentKek);
+
+  // Derive new KEK with fresh salt
+  const newSaltHex = generateSalt();
+  const newKek = await deriveKeyFromPin(newPin, newSaltHex);
+  const newVerifier = await createVerifier(newKek);
+
+  // Re-wrap the SAME DEK with the new KEK
+  const newWrapped = await rewrapDataKey(currentDek, newKek);
+
+  await db.meta.put({ key: 'crypto_salt', value: newSaltHex });
+  await db.meta.put({ key: 'crypto_verifier', value: newVerifier });
+  await db.meta.put({ key: 'wrapped_dek', value: newWrapped });
+
+  if (activeSession) {
+    activeSession.cryptoKey = currentDek;
+  }
+  return true;
 }
 
 export async function loginWithCredentials(
@@ -246,7 +437,7 @@ export async function loginWithCredentials(
       const data = await resp.json();
       const user: AuthUser = data.user;
 
-      // Online login succeeded: derive key from PIN and store encrypted at rest
+      // Online login succeeded: derive KEK, verifier, and DEK
       let saltMeta = await db.meta.get('crypto_salt');
       let saltHex = saltMeta?.value;
       if (!saltHex) {
@@ -254,9 +445,11 @@ export async function loginWithCredentials(
         await db.meta.put({ key: 'crypto_salt', value: saltHex });
       }
 
-      const cryptoKey = await deriveKeyFromPin(pin, saltHex);
-      const verifier = await createVerifier(cryptoKey);
+      const kek = await deriveKeyFromPin(pin, saltHex);
+      const verifier = await createVerifier(kek);
       await db.meta.put({ key: 'crypto_verifier', value: verifier });
+
+      const dek = await ensureDataKey(kek);
 
       // Encrypt session payload at rest
       const sessionData = JSON.stringify({
@@ -264,7 +457,7 @@ export async function loginWithCredentials(
         accessToken: data.accessToken,
         refreshToken: data.refreshToken
       });
-      const encSession = await encryptString(sessionData, cryptoKey);
+      const encSession = await encryptString(sessionData, dek);
       await db.meta.put({ key: 'auth_session_encrypted', value: encSession });
       await db.meta.put({ key: 'last_staff_id', value: staffId.trim() });
 
@@ -272,15 +465,16 @@ export async function loginWithCredentials(
         user,
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
-        cryptoKey,
-        isOfflineUnlock: false
+        cryptoKey: dek,
+        isOfflineUnlock: false,
+        isLocked: false
       };
       savePersistentSession(activeSession);
 
-      failedOfflineAttempts = 0;
+      failedUnlockAttempts = 0;
+      notifyLockState();
       return user;
     } catch (err: any) {
-      // If network failure, server offline, or timeout: seamlessly fall through to offline unlock!
       return attemptOfflineUnlock(staffId, pin);
     }
   } else {
@@ -295,69 +489,79 @@ async function attemptOfflineUnlock(staffId: string, pin: string): Promise<AuthU
   let sessionMeta = await db.meta.get('auth_session_encrypted');
   const lastStaffMeta = await db.meta.get('last_staff_id');
 
-  // 1. Built-in Seeded Offline Fallback for field workers
-  const seed = SEEDED_OFFLINE_USERS[staffLower];
-  if (seed && pin === seed.pin) {
-    if (!saltMeta?.value) {
-      const saltHex = generateSalt();
-      await db.meta.put({ key: 'crypto_salt', value: saltHex });
-      saltMeta = { key: 'crypto_salt', value: saltHex };
+  // Task 1.5: Seeded accounts only when VITE_DEMO_MODE !== "false"
+  if (isDemoMode()) {
+    const seed = SEEDED_OFFLINE_USERS[staffLower];
+    if (seed && pin === seed.pin) {
+      if (!saltMeta?.value) {
+        const saltHex = generateSalt();
+        await db.meta.put({ key: 'crypto_salt', value: saltHex });
+        saltMeta = { key: 'crypto_salt', value: saltHex };
+      }
+      const kek = await deriveKeyFromPin(pin, saltMeta.value);
+      const verifier = await createVerifier(kek);
+      await db.meta.put({ key: 'crypto_verifier', value: verifier });
+
+      const dek = await ensureDataKey(kek);
+
+      const sessionData = JSON.stringify({
+        user: seed.user,
+        accessToken: `offline-token-${seed.user.id}`,
+        refreshToken: `offline-refresh-${seed.user.id}`
+      });
+      const encSession = await encryptString(sessionData, dek);
+      await db.meta.put({ key: 'auth_session_encrypted', value: encSession });
+      await db.meta.put({ key: 'last_staff_id', value: staffLower });
+
+      activeSession = {
+        user: seed.user,
+        accessToken: `offline-token-${seed.user.id}`,
+        refreshToken: `offline-refresh-${seed.user.id}`,
+        cryptoKey: dek,
+        isOfflineUnlock: true,
+        isLocked: false
+      };
+      savePersistentSession(activeSession);
+      failedUnlockAttempts = 0;
+      notifyLockState();
+      return seed.user;
     }
-    const cryptoKey = await deriveKeyFromPin(pin, saltMeta.value);
-    const verifier = await createVerifier(cryptoKey);
-    await db.meta.put({ key: 'crypto_verifier', value: verifier });
-
-    const sessionData = JSON.stringify({
-      user: seed.user,
-      accessToken: `offline-token-${seed.user.id}`,
-      refreshToken: `offline-refresh-${seed.user.id}`
-    });
-    const encSession = await encryptString(sessionData, cryptoKey);
-    await db.meta.put({ key: 'auth_session_encrypted', value: encSession });
-    await db.meta.put({ key: 'last_staff_id', value: staffLower });
-
-    activeSession = {
-      user: seed.user,
-      accessToken: `offline-token-${seed.user.id}`,
-      refreshToken: `offline-refresh-${seed.user.id}`,
-      cryptoKey,
-      isOfflineUnlock: true
-    };
-    savePersistentSession(activeSession);
-    failedOfflineAttempts = 0;
-    return seed.user;
   }
 
-  // 2. Standard encrypted offline unlock for previously logged-in users
+  // Standard encrypted offline unlock for established accounts
   if (!saltMeta || !verifierMeta || !sessionMeta) {
-    throw new Error('No offline credentials found on this device. Sign in with a seeded account (e.g. chw1 / Test-Password-1) or connect to server.');
+    throw new Error('No offline credentials found on this device. Sign in online first or use demo credentials if demo mode is active.');
   }
 
   if (lastStaffMeta?.value && lastStaffMeta.value.toLowerCase() !== staffLower) {
-    throw new Error(`Device is signed in as '${lastStaffMeta.value}'. Please use PIN for '${lastStaffMeta.value}' or sign in as a standard seeded account.`);
+    throw new Error(`Device is signed in as '${lastStaffMeta.value}'. Please use PIN for '${lastStaffMeta.value}'.`);
   }
 
-  // Rate-limiting delay on repeated failed offline attempts
-  if (failedOfflineAttempts > 3) {
-    const delayMs = Math.min(30000, 2000 * Math.pow(2, failedOfflineAttempts - 3));
-    await new Promise(r => setTimeout(r, delayMs));
+  const remainingCooldown = getLockCooldownRemainingSeconds();
+  if (remainingCooldown > 0) {
+    throw new Error(`Too many failed attempts. Please wait ${remainingCooldown}s.`);
   }
 
   const saltHex = saltMeta.value;
-  const cryptoKey = await deriveKeyFromPin(pin, saltHex);
+  const kek = await deriveKeyFromPin(pin, saltHex);
   const verifier = verifierMeta.value;
 
-  const valid = await verifyKey(cryptoKey, verifier.verifierCipher, verifier.verifierIv);
+  const valid = await verifyKey(kek, verifier.verifierCipher, verifier.verifierIv);
   if (!valid) {
-    failedOfflineAttempts++;
-    throw new Error('Invalid PIN for offline unlock.');
+    failedUnlockAttempts++;
+    const backoff = Math.min(300, Math.pow(2, failedUnlockAttempts - 1));
+    lockCooldownUntil = Date.now() + backoff * 1000;
+    throw new Error(`Invalid PIN for offline unlock. Cooldown: ${backoff}s.`);
   }
 
-  failedOfflineAttempts = 0;
+  failedUnlockAttempts = 0;
+  lockCooldownUntil = 0;
+  const dek = await ensureDataKey(kek);
+
   const decSessionStr = await decryptString(
     sessionMeta.value.ciphertext,
     sessionMeta.value.iv,
-    cryptoKey
+    dek
   );
   const decSession = JSON.parse(decSessionStr);
 
@@ -365,10 +569,12 @@ async function attemptOfflineUnlock(staffId: string, pin: string): Promise<AuthU
     user: decSession.user,
     accessToken: decSession.accessToken || '',
     refreshToken: decSession.refreshToken || '',
-    cryptoKey,
-    isOfflineUnlock: true
+    cryptoKey: dek,
+    isOfflineUnlock: true,
+    isLocked: false
   };
   savePersistentSession(activeSession);
+  notifyLockState();
 
   return decSession.user;
 }
@@ -386,36 +592,29 @@ export async function refreshAccessToken(): Promise<string | null> {
 
     if (!resp.ok) {
       if (resp.status === 401 || resp.status === 403) {
-        // Refresh token revoked or invalid: sign out
         activeSession = null;
-        await db.meta.delete('auth_session_encrypted');
+        getStorage().removeItem(PERSISTENT_SESSION_KEY);
+        notifyLockState();
       }
       return null;
     }
 
     const data = await resp.json();
     activeSession.accessToken = data.accessToken;
-    activeSession.refreshToken = data.refreshToken;
-
-    // Re-encrypt updated tokens
-    const sessionData = JSON.stringify({
-      user: activeSession.user,
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken
-    });
-    const encSession = await encryptString(sessionData, activeSession.cryptoKey);
-    await db.meta.put({ key: 'auth_session_encrypted', value: encSession });
     savePersistentSession(activeSession);
-
     return data.accessToken;
   } catch {
     return null;
   }
 }
 
+export function getActiveSession(): Session | null {
+  return activeSession;
+}
+
 export async function logoutUser(): Promise<void> {
+  const baseUrl = await getApiBaseUrl();
   if (activeSession && activeSession.refreshToken && typeof navigator !== 'undefined' && navigator.onLine) {
-    const baseUrl = await getApiBaseUrl();
     try {
       await fetch(`${baseUrl}/api/auth/logout`, {
         method: 'POST',
@@ -424,8 +623,8 @@ export async function logoutUser(): Promise<void> {
       });
     } catch { }
   }
+
   activeSession = null;
-  try {
-    getStorage().removeItem(PERSISTENT_SESSION_KEY);
-  } catch { }
+  getStorage().removeItem(PERSISTENT_SESSION_KEY);
+  notifyLockState();
 }

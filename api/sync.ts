@@ -11,6 +11,7 @@
 import crypto from 'crypto';
 import { getPgPool, memoryDb, DbEvent, DbPatient, DbConflict, DbConflictSibling } from './db';
 import { TokenPayload } from './auth';
+import { encryptServerField, decryptServerField } from './crypto';
 
 const MAX_DRIFT_MS = 5 * 60 * 1000; // 5 mins
 
@@ -182,7 +183,7 @@ export async function ingestChunk(
         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
       `, [
         e.eventId, e.deviceId, user.sub, e.patientId, e.entityType, e.entityId, e.op,
-        e.payload, e.schemaVersion || 1, e.hlc, e.baseHlc || null, createdAt, e.hash, bucket, chunk.chunkId
+        encryptServerField(e.payload), e.schemaVersion || 1, e.hlc, e.baseHlc || null, createdAt, e.hash, bucket, chunk.chunkId
       ]);
     } else {
       memoryDb.events.push({
@@ -194,7 +195,7 @@ export async function ingestChunk(
         entity_type: e.entityType,
         entity_id: e.entityId,
         op: e.op,
-        payload: e.payload,
+        payload: encryptServerField(e.payload),
         schema_version: e.schemaVersion || 1,
         hlc: e.hlc,
         base_hlc: e.baseHlc || null,
@@ -446,7 +447,7 @@ export async function getChangesFeed(
     entityType: r.entity_type,
     entityId: r.entity_id,
     op: r.op,
-    payload: r.payload,
+    payload: decryptServerField(r.payload),
     schemaVersion: r.schema_version,
     hlc: r.hlc,
     baseHlc: r.base_hlc,
@@ -539,7 +540,7 @@ export async function fetchEventsByIds(eventIds: string[], user: TokenPayload): 
       entityType: r.entity_type,
       entityId: r.entity_id,
       op: r.op,
-      payload: r.payload,
+      payload: decryptServerField(r.payload),
       schemaVersion: r.schema_version,
       hlc: r.hlc,
       baseHlc: r.base_hlc,
@@ -563,7 +564,7 @@ export async function fetchEventsByIds(eventIds: string[], user: TokenPayload): 
         entityType: e.entity_type,
         entityId: e.entity_id,
         op: e.op,
-        payload: e.payload,
+        payload: decryptServerField(e.payload),
         schemaVersion: e.schema_version,
         hlc: e.hlc,
         baseHlc: e.base_hlc,

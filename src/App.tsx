@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { LuMenu, LuX, LuUsers, LuActivity, LuStethoscope, LuGitMerge, LuRefreshCw, LuLogOut, LuWifi, LuWifiOff, LuSun, LuMoon } from 'react-icons/lu';
+import { LuMenu, LuX, LuUsers, LuActivity, LuStethoscope, LuGitMerge, LuRefreshCw, LuLogOut, LuWifi, LuWifiOff, LuSun, LuMoon, LuLock } from 'react-icons/lu';
 import { Button, IconButton, Toasts } from './ui';
 import { Store, useStore } from './store';
 import { Login } from './LoginPage';
 import { Dashboard, Vitals, Doctor, Conflicts, Sync, go } from './pages';
-import { logoutUser, touchActivity } from './lib/auth';
+import { logoutUser, touchActivity, isSessionLocked, subscribeLockState, lockSession } from './lib/auth';
 import { useI18n, LANGUAGES, LangCode, AppTheme } from './lib/i18n';
+import { PinLockModal } from './PinLockModal';
 
 const useRoute = () => {
   const r = () => location.hash.slice(1) || '/login';
@@ -23,6 +24,11 @@ function Shell() {
   const { lang, setLang, theme, setTheme, t } = useI18n();
   const [path, q] = useRoute();
   const [open, setOpen] = useState(false);
+  const [locked, setLocked] = useState(isSessionLocked());
+
+  useEffect(() => {
+    return subscribeLockState(setLocked);
+  }, []);
 
   const navItems = [
     ['/dashboard', t.dashboard, LuUsers],
@@ -170,9 +176,14 @@ function Shell() {
         <Button variant="outlined" size="sm" icon={s.online ? <LuWifi /> : <LuWifiOff />} onClick={toggle}>
           {s.online ? t.online : t.offline}
         </Button>
-        <Button variant="text" size="sm" icon={<LuLogOut />} onClick={handleSignOut}>
-          {t.signOut} ({s.user?.name?.split(' ')[0]})
-        </Button>
+        <div className="row" style={{ gap: 4, width: '100%', marginTop: 4 }}>
+          <Button variant="outlined" size="sm" icon={<LuLock />} onClick={() => lockSession()} style={{ flex: 1 }}>
+            Lock
+          </Button>
+          <Button variant="text" size="sm" icon={<LuLogOut />} onClick={handleSignOut} style={{ flex: 1 }}>
+            {t.signOut}
+          </Button>
+        </div>
       </aside>
 
       <div className="main">
@@ -220,6 +231,8 @@ function Shell() {
           </div>
         )}
       </div>
+
+      {locked && s.user && <PinLockModal />}
     </div>
   );
 }

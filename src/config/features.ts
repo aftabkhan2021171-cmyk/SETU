@@ -45,10 +45,10 @@ export interface FeatureFlags {
 }
 
 export const DEFAULT_FEATURES: FeatureFlags = {
-  // Phase 1
-  encryptionAtRest: false,
-  inactivityPinLock: false,
-  serverSqlEncryption: false,
+  // Phase 1 (VERIFIED & PASSED)
+  encryptionAtRest: true,
+  inactivityPinLock: true,
+  serverSqlEncryption: true,
 
   // Phase 2
   tombstoneDeletes: false,

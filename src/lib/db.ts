@@ -15,10 +15,11 @@ export interface StoredEvent {
   patientId: string;
   entityType: string;
   entityId: string;
-  op: 'create' | 'update' | 'resolve';
+  op: 'create' | 'update' | 'resolve' | 'delete';
   payload: string; // Plaintext or decrypted JSON string
-  encryptedPayload?: string; // If encrypted at rest
-  payloadIv?: string;
+  encryptedPayload?: string; // AES-256-GCM ciphertext
+  payloadIv?: string; // 12-byte IV
+  keyId?: string; // e.g. 'dek-v1'
   schemaVersion: number;
   hlc: string;
   baseHlc?: string | null;
@@ -132,6 +133,21 @@ export class SetuDatabase extends Dexie {
       conflictSiblings: '[conflictId+eventId], conflictId, eventId, hlc',
       meta: 'key',
       audit: '++id, timestamp, action'
+    });
+
+    // Version 2: Add keyId index for cryptographic key rotation and encryption at rest
+    this.version(2).stores({
+      events: 'eventId, deviceId, patientId, entityType, entityId, op, hlc, createdAt, hash, keyId',
+      outbox: 'eventId, status, attempts, chunkId, createdAt, updatedAt',
+      patients: 'id, name, locality, status, district, updatedAt, keyId',
+      vitals: 'id, patientId, at, eventId, hlc, keyId',
+      fieldHeads: '[entityId+fieldName], entityId, fieldName, hlc',
+      conflicts: 'id, patientId, fieldName, status, createdAt',
+      conflictSiblings: '[conflictId+eventId], conflictId, eventId, hlc',
+      meta: 'key',
+      audit: '++id, timestamp, action'
+    }).upgrade(() => {
+      // Additive upgrade: existing records remain untouched and readable
     });
   }
 }
