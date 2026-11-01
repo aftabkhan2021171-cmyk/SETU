@@ -37,4 +37,4 @@ SETU is built as an offline-first clinical workspace for frontline health worker
 - **Multilingual:** 16 languages covering all 7 Sisters of North-East India and regional scripts.
 - **Outdoor Mode:** High-contrast Sunlight mode for field work under direct sun.
 
-Synthetic demo data only. Do not enter real patient information.
+
