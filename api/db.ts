@@ -104,10 +104,20 @@ export function getPgPool(): Pool | null {
   const connStr = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   if (!connStr) return null;
   if (!pool) {
-    pool = new Pool({
-      connectionString: connStr,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined
-    });
+    try {
+      pool = new Pool({
+        connectionString: connStr,
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+        connectionTimeoutMillis: 5000,
+        idleTimeoutMillis: 10000
+      });
+      pool.on('error', (err) => {
+        console.warn('Unexpected error on idle PostgreSQL client, falling back to in-memory:', err.message);
+      });
+    } catch (e) {
+      console.warn('Could not initialize PostgreSQL pool:', e);
+      return null;
+    }
   }
   return pool;
 }
@@ -115,8 +125,9 @@ export function getPgPool(): Pool | null {
 export async function initDatabase(): Promise<void> {
   if (isInitialized) return;
 
-  const pg = getPgPool();
+  let pg = getPgPool();
   if (pg) {
+    try {
     // Initialize PostgreSQL schema
     await pg.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -237,7 +248,15 @@ export async function initDatabase(): Promise<void> {
         ('u-007', 'aww1', 'Meena Kumari (AWW)', 'CHW', 'Ludhiana', $1)
       `, [hash]);
     }
-  } else {
+    isInitialized = true;
+    return;
+  } catch (pgInitErr) {
+    console.warn('PostgreSQL connection/initialization failed, gracefully falling back to in-memory store:', pgInitErr);
+    pool = null;
+  }
+}
+
+  // Seed in-memory store
     // Seed in-memory store
     if (memoryDb.users.size === 0) {
       const salt = bcrypt.genSaltSync(10);
@@ -257,7 +276,8 @@ export async function initDatabase(): Promise<void> {
         memoryDb.users.set(u.staff_id, u);
       }
     }
-  }
 
   isInitialized = true;
 }
+
+export { default } from './index';

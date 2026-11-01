@@ -640,3 +640,5 @@ export async function resolveConflict(
     }
   }
 }
+
+export { default } from './index';
