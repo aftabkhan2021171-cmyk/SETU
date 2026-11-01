@@ -121,9 +121,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'Existing patient found! Prevent duplicate entry:',
     updateExisting: 'Open & Update Existing',
     registerAnyway: 'Register Anyway (Different Person)',
-    outdoorMode: '☀️ Sunlight Mode',
-    darkMode: '🌙 Dark Mode',
-    warmMode: '🎨 Default Theme'
+    outdoorMode: ' Bright Mode',
+    darkMode: ' Dark Mode',
+    warmMode: ' Default Theme'
   },
   as: { // Assamese (Assam)
     dashboard: 'ফিল্ড ডেচবৰ্ড',
@@ -157,9 +157,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'পূৰ্বৰ ৰোগী পোৱা গৈছে! নকল তথ্য এৰাই চলক:',
     updateExisting: 'পূৰ্বৰ ৰোগী আপডেট কৰক',
     registerAnyway: 'নতুন ব্যক্তি হিচাপে ৰাখক',
-    outdoorMode: '☀️ ৰ’দৰ মোড',
-    darkMode: '🌙 অন্ধকাৰ মোড',
-    warmMode: '🎨 মূল ৰূপ'
+    outdoorMode: ' ৰ’দৰ মোড',
+    darkMode: ' অন্ধকাৰ মোড',
+    warmMode: ' মূল ৰূপ'
   },
   bn: { // Bengali (Tripura / Assam / Bengal)
     dashboard: 'ফিল্ড ড্যাশবোর্ড',
@@ -193,9 +193,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'একই নামের রোগী ইতিমধ্যে বিদ্যমান! ডুপ্লিকেট এড়ান:',
     updateExisting: 'বিদ্যমান রোগী আপডেট করুন',
     registerAnyway: 'ভিন্ন ব্যক্তি হিসেবে সেভ করুন',
-    outdoorMode: '☀️ রোদের মোড',
-    darkMode: '🌙 ডার্ক মোড',
-    warmMode: '🎨 ডিফল্ট থিম'
+    outdoorMode: ' রোদের মোড',
+    darkMode: ' ডার্ক মোড',
+    warmMode: ' ডিফল্ট থিম'
   },
   mni: { // Manipuri / Meitei (Manipur)
     dashboard: 'ফিল্ড দেশবোর্দ',
@@ -229,9 +229,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'অনাবা অসি মমাংদগী লৈরে! অমুক্কা হাপচিনগনু:',
     updateExisting: 'লৈরিবা অনাবা অপদেত তৌবা',
     registerAnyway: 'তোঙানবা মীওইনি সেভ তৌবা',
-    outdoorMode: '☀️ নুমিৎ মোদ',
-    darkMode: '🌙 অমম্বা মোদ',
-    warmMode: '🎨 সেতু থিম'
+    outdoorMode: ' নুমিৎ মোদ',
+    darkMode: ' অমম্বা মোদ',
+    warmMode: ' সেতু থিম'
   },
   lus: { // Mizo (Mizoram)
     dashboard: 'Field Dashboard',
@@ -265,9 +265,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'He hming ang hi a awm tawh! Dah nawn suh:',
     updateExisting: 'A awm sa siamtha rawh',
     registerAnyway: 'Mi dang a ni e tih nemnghet rawh',
-    outdoorMode: '☀️ Ni en lai mode',
-    darkMode: '🌙 Dark Mode',
-    warmMode: '🎨 Pangngai'
+    outdoorMode: ' Ni en lai mode',
+    darkMode: ' Dark Mode',
+    warmMode: ' Pangngai'
   },
   kha: { // Khasi (Meghalaya)
     dashboard: 'Ka Dashboard',
@@ -301,9 +301,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'Don lypa une u nongpang! Wat pynrung ar sien:',
     updateExisting: 'Pynbha ia uba don lypa',
     registerAnyway: 'Uba pher u briew',
-    outdoorMode: '☀️ Sngi Mode',
-    darkMode: '🌙 Dum Mode',
-    warmMode: '🎨 Riti Ba Rim'
+    outdoorMode: ' Sngi Mode',
+    darkMode: 'Dum Mode',
+    warmMode: ' Riti Ba Rim'
   },
   brx: { // Bodo (Bodoland / Assam)
     dashboard: 'गाहाइ बिलाइ',
@@ -337,9 +337,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'बे मुंनि बेरामी दंखायो! खननै सोदेरनाङा:',
     updateExisting: 'थाखानायखौ मोजां खालाम',
     registerAnyway: 'गुबुन मानसि हिसाबै दोन',
-    outdoorMode: '☀️ सानदुं मोद',
-    darkMode: '🌙 खोमसि मोद',
-    warmMode: '🎨 गुदि महर'
+    outdoorMode: ' सानदुं मोद',
+    darkMode: ' खोमसि मोद',
+    warmMode: ' गुदि महर'
   },
   nag: { // Nagamese (Nagaland)
     dashboard: 'Field Dashboard',
@@ -373,9 +373,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'Etu naam laga manu agete ase! Dui bar nadhalibi:',
     updateExisting: 'Agete thaka tu update kora',
     registerAnyway: 'Alag manu ase eneka likhibi',
-    outdoorMode: '☀️ Roud Mode',
-    darkMode: '🌙 Andhera Mode',
-    warmMode: '🎨 Normal'
+    outdoorMode: ' Roud Mode',
+    darkMode: ' Andhera Mode',
+    warmMode: ' Normal'
   },
   pa: { // Punjabi (Punjab)
     dashboard: 'ਫੀਲਡ ਡੈਸ਼ਬੋਰਡ',
@@ -409,9 +409,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'ਇਹ ਮਰੀਜ਼ ਪਹਿਲਾਂ ਤੋਂ ਮੌਜੂਦ ਹੈ! ਦੋਹਰਾ ਇੰਦਰਾਜ ਰੋਕੋ:',
     updateExisting: 'ਪੁਰਾਣੇ ਮਰੀਜ਼ ਦਾ ਰਿਕਾਰਡ ਖੋਲ੍ਹੋ',
     registerAnyway: 'ਵੱਖਰਾ ਵਿਅਕਤੀ ਮੰਨ ਕੇ ਦਰਜ ਕਰੋ',
-    outdoorMode: '☀️ ਧੁੱਪ ਮੋਡ (Sunlight)',
-    darkMode: '🌙 ਡਾਰਕ ਮੋਡ',
-    warmMode: '🎨 ਮੂਲ ਥੀਮ'
+    outdoorMode: ' ਧੁੱਪ ਮੋਡ (Sunlight)',
+    darkMode: ' ਡਾਰਕ ਮੋਡ',
+    warmMode: ' ਮੂਲ ਥੀਮ'
   },
   hi: { // Hindi (National)
     dashboard: 'फील्ड डैशबोर्ड',
@@ -445,9 +445,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'यह मरीज़ पहले से मौजूद है! डुप्लीकेट प्रविष्टि से बचें:',
     updateExisting: 'मौजूदा मरीज़ को अपडेट करें',
     registerAnyway: 'अलग व्यक्ति के रूप में सहेजें',
-    outdoorMode: '☀️ धूप मोड (High Contrast)',
-    darkMode: '🌙 डार्क मोड',
-    warmMode: '🎨 डिफॉल्ट थीम'
+    outdoorMode: ' धूप मोड (High Contrast)',
+    darkMode: 'डार्क मोड',
+    warmMode: ' डिफॉल्ट थीम'
   },
   ta: { // Tamil (Tamil Nadu)
     dashboard: 'கள முகப்பு',
@@ -481,9 +481,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'ஏற்கனவே இந்த நோயாளி உள்ளார்! நகல் பதிவைத் தவிர்க்கவும்:',
     updateExisting: 'தற்போதுள்ள நோயாளியைப் புதுப்பிக்கவும்',
     registerAnyway: 'வேறு நபர் எனப் பதிவு செய்',
-    outdoorMode: '☀️ வெயில் பயன்முறை',
-    darkMode: '🌙 இரவு பயன்முறை',
-    warmMode: '🎨 இயல்பு தோற்றம்'
+    outdoorMode: ' வெயில் பயன்முறை',
+    darkMode: ' இரவு பயன்முறை',
+    warmMode: ' இயல்பு தோற்றம்'
   },
   te: { // Telugu (Andhra / Telangana)
     dashboard: 'ఫీల్డ్ డ్యాష్‌బోర్డ్',
@@ -517,9 +517,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'ఈ పేరుతో రోగి ఇప్పటికే ఉన్నారు! డూప్లికేట్ నమోదును నివారించండి:',
     updateExisting: 'ప్రస్తుత రోగి వివరాలు అప్‌డేట్ చేయండి',
     registerAnyway: 'వేరే వ్యక్తిగా నమోదు చేయండి',
-    outdoorMode: '☀️ ఎండ మోడ్',
-    darkMode: '🌙 డార్క్ మోడ్',
-    warmMode: '🎨 సాధారణ థీమ్'
+    outdoorMode: ' ఎండ మోడ్',
+    darkMode: ' డార్క్ మోడ్',
+    warmMode: ' సాధారణ థీమ్'
   },
   ml: { // Malayalam (Kerala)
     dashboard: 'ഫീൽഡ് ഡാഷ്‌ബോർഡ്',
@@ -553,9 +553,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'ഈ രോഗി നിലവിലുണ്ട്! ഇരട്ട എൻട്രി ഒഴിവാക്കുക:',
     updateExisting: 'നിലവിലുള്ള രോഗിയെ അപ്ഡേറ്റ് ചെയ്യുക',
     registerAnyway: 'മറ്റൊരു ആളായി രജിസ്റ്റർ ചെയ്യുക',
-    outdoorMode: '☀️ വെയിൽ മോഡ്',
-    darkMode: '🌙 ഡാർക്ക് മോഡ്',
-    warmMode: '🎨 സ്വാഭാവിക ശൈലി'
+    outdoorMode: ' വെയിൽ മോഡ്',
+    darkMode: ' ഡാർക്ക് മോഡ്',
+    warmMode: ' സ്വാഭാവിക ശൈലി'
   },
   kn: { // Kannada (Karnataka)
     dashboard: 'ಫೀಲ್ಡ್ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',
@@ -589,9 +589,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'ಈ ರೋಗಿ ಈಗಾಗಲೇ ಅಸ್ತಿತ್ವದಲ್ಲಿದ್ದಾರೆ! ನಕಲು ನಮೂದು ತಪ್ಪಿಸಿ:',
     updateExisting: 'ಈಗಿರುವ ರೋಗಿಯನ್ನು ನವೀಕರಿಸಿ',
     registerAnyway: 'ಬೇರೆ ವ್ಯಕ್ತಿಯಾಗಿ ನೋಂದಾಯಿಸಿ',
-    outdoorMode: '☀️ ಬಿಸಿಲು ಮೋಡ್',
-    darkMode: '🌙 ಡಾರ್ಕ್ ಮೋಡ್',
-    warmMode: '🎨 ಸಾಮಾನ್ಯ ಥೀಮ್'
+    outdoorMode: ' ಬಿಸಿಲು ಮೋಡ್',
+    darkMode: ' ಡಾರ್ಕ್ ಮೋಡ್',
+    warmMode: ' ಸಾಮಾನ್ಯ ಥೀಮ್'
   },
   or: { // Odia (Odisha)
     dashboard: 'ଫିଲ୍ଡ ଡ୍ୟାସବୋର୍ଡ',
@@ -625,9 +625,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'ଏହି ନାମର ରୋଗୀ ପୂର୍ବରୁ ଅଛନ୍ତି! ନକଲ ଏଡାନ୍ତୁ:',
     updateExisting: 'ପୂର୍ବ ରୋଗୀଙ୍କୁ ଅଦ୍ୟତନ କରନ୍ତୁ',
     registerAnyway: 'ଅନ୍ୟ ବ୍ୟକ୍ତି ଭାବେ ସାଇତନ୍ତୁ',
-    outdoorMode: '☀️ ଖରା ମୋଡ',
-    darkMode: '🌙 ଅନ୍ଧାର ମୋଡ',
-    warmMode: '🎨 ମୂଳ ଥିମ'
+    outdoorMode: ' ଖରା ମୋଡ',
+    darkMode: ' ଅନ୍ଧାର ମୋଡ',
+    warmMode: ' ମୂଳ ଥିମ'
   },
   mr: { // Marathi (Maharashtra)
     dashboard: 'फील्ड डॅशबोर्ड',
@@ -661,9 +661,9 @@ export const TRANSLATIONS: Record<LangCode, TranslationStrings> = {
     duplicateDetected: 'हा रुग्ण आधीपासून अस्तित्वात आहे! डुप्लिकेट टाळा:',
     updateExisting: 'अस्तित्वात असलेला रुग्ण अपडेट करा',
     registerAnyway: 'वेगळी व्यक्ती म्हणून जतन करा',
-    outdoorMode: '☀️ उन्हाळा मोड (High Contrast)',
-    darkMode: '🌙 डार्क मोड',
-    warmMode: '🎨 मूळ थीम'
+    outdoorMode: ' उन्हाळा मोड (High Contrast)',
+    darkMode: ' डार्क मोड',
+    warmMode: ' मूळ थीम'
   }
 };
 
