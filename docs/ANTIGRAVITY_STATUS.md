@@ -26,6 +26,11 @@
   - Frontline cadres: ASHA, ANM, AWW, CHW, Doctor, Admin with 1-click login selector, profile badges, and seeded offline accounts (`asha1`, `anm1`, `aww1`, `chw1`, `doctor1`, `admin1`).
   - Pediatric Vaccination Chart: National Immunization Schedule config (`config/vaccination-schedule.json`, labeled `needs clinical review`), milestone calculation, checkboxes for all vaccines, table badges, and modal record updater for children under 15.
   - Field Catch-Up Periodic Summary: Evaluates multi-day entries (72h) generating summarized banner text like `"5 new entries with 2 severe"` with quick severe filtering.
+- [x] **1.10 Auto-Sync on Reconnect (Offline to Online)**:
+  - When patient or clinical records are created/edited offline, they are safely written to local IndexedDB (`db.events`) and outbox (`db.outbox` as `pending`).
+  - Network state listener (`window.addEventListener('online')`) and in-app online toggle immediately unpause the sync engine and dispatch a debounced sync chunk (`triggerSyncDebounced(100)`).
+  - Transparent toast notifications: alerts the user when network is restored (`🟢 Network connected: auto-syncing X offline record(s)...`) and confirms when upload finishes (`☁️ Auto-sync complete: offline records successfully synced to cloud!`).
+  - Seamless token exchange: allows offline demo unlock sessions to acquire live server tokens upon reconnecting without session eviction.
 
 ---
 

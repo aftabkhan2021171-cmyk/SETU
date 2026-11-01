@@ -104,9 +104,12 @@ export async function initSyncEngine(): Promise<void> {
   await refreshOutboxStats();
 
   // 2. Listen to network changes
-  window.addEventListener('online', () => {
-    if (!syncPaused) triggerSyncDebounced(200);
-  });
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', () => {
+      setSyncPaused(false);
+      triggerSyncDebounced(100);
+    });
+  }
 
   // 3. Periodic background sync every 30 seconds
   if (syncTimeout) clearInterval(syncTimeout);
@@ -167,6 +170,14 @@ async function uploadPendingEvents(session: ReturnType<typeof getActiveSession>)
   const CHUNK_SIZE = 25;
   const pendingItems = await db.outbox.where('status').equals('pending').sortBy('createdAt');
   if (pendingItems.length === 0) return;
+
+  // Proactively acquire live token if running with offline demo placeholder
+  if (session.accessToken?.startsWith('offline-')) {
+    const liveToken = await refreshAccessToken();
+    if (liveToken) {
+      session.accessToken = liveToken;
+    }
+  }
 
   for (let i = 0; i < pendingItems.length; i += CHUNK_SIZE) {
     const slice = pendingItems.slice(i, i + CHUNK_SIZE);

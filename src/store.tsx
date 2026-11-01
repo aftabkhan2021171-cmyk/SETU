@@ -151,8 +151,15 @@ export function Store({ children }: { children: ReactNode }) {
     initSyncEngine();
     const unsubscribeSync = subscribeSyncStats(s => setSyncStats(s));
 
-    const handleOnline = () => setOnlineState(true);
-    const handleOffline = () => setOnlineState(false);
+    const handleOnline = () => {
+      setOnlineState(true);
+      setSyncPaused(false);
+      triggerSyncDebounced(100);
+    };
+    const handleOffline = () => {
+      setOnlineState(false);
+      setSyncPaused(true);
+    };
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
@@ -472,6 +479,9 @@ export function Store({ children }: { children: ReactNode }) {
     setOnline: (isOnline: boolean) => {
       setOnlineState(isOnline);
       setSyncPaused(!isOnline);
+      if (isOnline) {
+        triggerSyncDebounced(100);
+      }
     },
     createPatient,
     updatePatientField,

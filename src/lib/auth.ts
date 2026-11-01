@@ -611,8 +611,38 @@ async function attemptOfflineUnlock(staffId: string, pin: string): Promise<AuthU
 }
 
 export async function refreshAccessToken(): Promise<string | null> {
-  if (!activeSession || !activeSession.refreshToken) return null;
+  if (!activeSession) return null;
   const baseUrl = await getApiBaseUrl();
+
+  // If session was an offline unlock with a seeded account, exchange for real token upon coming online
+  if (activeSession.refreshToken?.startsWith('offline-') && isDemoMode() && activeSession.user?.staffId) {
+    const seed = SEEDED_OFFLINE_USERS[activeSession.user.staffId.toLowerCase()];
+    if (seed) {
+      try {
+        const deviceId = await getOrCreateDeviceId();
+        const resp = await fetch(`${baseUrl}/api/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            staffId: seed.user.staffId,
+            password: seed.pin,
+            deviceId,
+            deviceName: 'SETU Web/Mobile Device'
+          })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          activeSession.accessToken = data.accessToken;
+          activeSession.refreshToken = data.refreshToken;
+          activeSession.isOfflineUnlock = false;
+          savePersistentSession(activeSession);
+          return data.accessToken;
+        }
+      } catch { }
+    }
+  }
+
+  if (!activeSession.refreshToken) return null;
 
   try {
     const resp = await fetch(`${baseUrl}/api/auth/refresh`, {
@@ -623,9 +653,11 @@ export async function refreshAccessToken(): Promise<string | null> {
 
     if (!resp.ok) {
       if (resp.status === 401 || resp.status === 403) {
-        activeSession = null;
-        getStorage().removeItem(PERSISTENT_SESSION_KEY);
-        notifyLockState();
+        if (!activeSession.isOfflineUnlock) {
+          activeSession = null;
+          getStorage().removeItem(PERSISTENT_SESSION_KEY);
+          notifyLockState();
+        }
       }
       return null;
     }

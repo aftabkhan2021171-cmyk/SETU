@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { LuMenu, LuX, LuUsers, LuActivity, LuStethoscope, LuGitMerge, LuRefreshCw, LuLogOut, LuWifi, LuWifiOff, LuSun, LuMoon, LuLock } from 'react-icons/lu';
-import { Button, IconButton, Toasts } from './ui';
+import { Button, IconButton, Toasts, useToast } from './ui';
 import { Store, useStore } from './store';
 import { Login } from './LoginPage';
 import { Dashboard, Vitals, Doctor, Conflicts, Sync, go } from './pages';
@@ -25,10 +25,36 @@ function Shell() {
   const [path, q] = useRoute();
   const [open, setOpen] = useState(false);
   const [locked, setLocked] = useState(isSessionLocked());
+  const toast = useToast();
+  const [wasOffline, setWasOffline] = useState(!s.online);
+  const [prevPending, setPrevPending] = useState(s.syncStats.pendingCount);
 
   useEffect(() => {
     return subscribeLockState(setLocked);
   }, []);
+
+  // Monitor network transitions for transparent auto-sync feedback
+  useEffect(() => {
+    if (wasOffline && s.online) {
+      setWasOffline(false);
+      if (s.syncStats.pendingCount > 0) {
+        toast(`🟢 Network connected: automatically syncing ${s.syncStats.pendingCount} offline record(s)...`);
+      } else {
+        toast(`🟢 Network connected: auto-sync active.`);
+      }
+    } else if (!wasOffline && !s.online) {
+      setWasOffline(true);
+      toast(`📡 Offline mode active: new entries will be saved locally and auto-synced when online.`);
+    }
+  }, [s.online, wasOffline, s.syncStats.pendingCount, toast]);
+
+  // Notify when pending entries finish auto-syncing
+  useEffect(() => {
+    if (prevPending > 0 && s.syncStats.pendingCount === 0 && s.syncStats.syncedCount > 0) {
+      toast(`☁️ Auto-sync complete: offline records successfully synced to cloud!`);
+    }
+    setPrevPending(s.syncStats.pendingCount);
+  }, [s.syncStats.pendingCount, s.syncStats.syncedCount, prevPending, toast]);
 
   const navItems = [
     ['/dashboard', t.dashboard, LuUsers],

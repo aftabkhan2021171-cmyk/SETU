@@ -1183,8 +1183,14 @@ export function Sync() {
   return (
     <div className="page">
       <h1>Sync manager</h1>
-      <div className="banner">
-        Status: <b>{s.online ? 'Online (Connected)' : 'Offline (Local Writes Only)'}</b>
+      <div className="banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <div>
+          Status: <b>{s.online ? 'Online (Connected)' : 'Offline (Local Writes Only)'}</b>
+        </div>
+        <span style={{ fontSize: '0.8rem', color: s.online ? '#059669' : '#D97706', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.online ? '#10B981' : '#F59E0B' }} />
+          {s.online ? '⚡ Auto-Sync on Reconnect: ACTIVE' : '📦 Queued for Auto-Sync on Reconnect'}
+        </span>
       </div>
 
       <div className="grid" style={{ marginBottom: 16 }}>
