@@ -39,6 +39,13 @@ export default async function handler(req: any, res: any) {
   const path = url.pathname.replace(/\/+$/, '');
   const method = req.method.toUpperCase();
 
+  // Ensure body is parsed if delivered as raw string
+  if (typeof req.body === 'string') {
+    try {
+      req.body = JSON.parse(req.body);
+    } catch { }
+  }
+
   // 1. Health check
   if (path === '/actuator/health' || path === '/api/health') {
     return res.status(200).json({ status: 'UP' });
