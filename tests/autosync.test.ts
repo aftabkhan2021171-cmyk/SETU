@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import 'fake-indexeddb/auto';
 import { db } from '../src/lib/db';
-import { initDatabase } from '../api/_lib/db';
+import { initDatabase, loginUser } from '../api/index';
 import handler from '../api/index';
 import {
   setSyncPaused,
@@ -11,7 +11,7 @@ import {
   runSync,
   initSyncEngine
 } from '../src/lib/sync';
-import { loginUser } from '../api/_lib/auth';
+
 import { generateUUID } from '../src/lib/uuid';
 import { computeChunkChecksum, computeEventHash } from '../src/lib/hash';
 import { Hlc } from '../src/lib/hlc';
