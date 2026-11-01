@@ -25,8 +25,16 @@ npm run dev
 - Conflict resolution
 - Offline sync manager
 
-## Important limitations
+## Architecture & Offline Capabilities
 
-This is a clickable React shell around the original Stitch HTML screens. The original screens use Tailwind's CDN and Google Fonts, so their original styling requires an internet connection. The React navigation works locally after npm dependencies are installed. The original buttons and forms are only as functional as their supplied HTML/JavaScript. This is not yet the completed offline database, packet sync, HLC, Automerge, encryption or backend implementation.
+SETU is built as an offline-first clinical workspace for frontline health workers:
+- **Client Storage:** Dexie / IndexedDB (`events`, `outbox`, `patients`, `vitals`, `fieldHeads`, `conflicts`, `conflictSiblings`, `meta`, `audit`).
+- **Causality & Ordering:** Hybrid Logical Clocks (HLC) with 5-minute maximum drift protection.
+- **Cryptography:** AES-256-GCM encryption with PBKDF2 key derivation (>= 310,000 iterations).
+- **Sync Protocol:** Chunked upload (25 events with SHA-256 event hashes and chunk checksums), `since` cursor download, Merkle tree anti-entropy reconciliation.
+- **Backend:** Universal Vercel serverless API (`api/index.ts`) supporting PostgreSQL with automatic in-memory fallback.
+- **PWA & Android:** Offline caching via Workbox service worker (`dist/sw.js`) and Capacitor Android integration.
+- **Multilingual:** 16 languages covering all 7 Sisters of North-East India and regional scripts.
+- **Outdoor Mode:** High-contrast Sunlight mode for field work under direct sun.
 
-Use synthetic demonstration data only. Do not enter real patient information.
+Synthetic demo data only. Do not enter real patient information.

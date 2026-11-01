@@ -88,32 +88,34 @@ describe('New Feature 2: Offline CSV / Excel Export', () => {
       }
     ];
 
-    // Mock document.createElement and click
-    let capturedContent = '';
-    let capturedFilename = '';
-
-    const origCreateElement = document.createElement;
-    document.createElement = function (tag: string) {
-      const el = origCreateElement.call(document, tag);
-      if (tag === 'a') {
-        Object.defineProperty(el, 'click', {
-          value: function () {
-            // Blob URL was assigned to href
-          }
-        });
-      }
-      return el;
+    // Mock document.createElement and click if in node environment
+    const hadDoc = typeof document !== 'undefined';
+    let clickCalled = false;
+    const fakeAnchor: any = {
+      setAttribute: (k: string, v: string) => {},
+      click: () => { clickCalled = true; }
     };
+    const fakeDoc: any = {
+      createElement: (tag: string) => (tag === 'a' ? fakeAnchor : {}),
+      body: { appendChild: () => {}, removeChild: () => {} }
+    };
+    if (!hadDoc) {
+      (globalThis as any).document = fakeDoc;
+    }
 
     const origCreateObjectURL = URL.createObjectURL;
-    URL.createObjectURL = (blob: any) => {
-      return 'blob:mock-csv-url';
-    };
+    URL.createObjectURL = (blob: any) => 'blob:mock-csv-url';
+    const origRevoke = URL.revokeObjectURL;
+    URL.revokeObjectURL = () => {};
 
     exportPatientsToCsv(mockPatients, mockVitals);
+    expect(clickCalled).toBe(true);
 
     // Restore
-    document.createElement = origCreateElement;
+    if (!hadDoc) {
+      delete (globalThis as any).document;
+    }
     URL.createObjectURL = origCreateObjectURL;
+    URL.revokeObjectURL = origRevoke;
   });
 });
