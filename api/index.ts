@@ -17,6 +17,7 @@ import {
 } from './sync';
 
 export default async function handler(req: any, res: any) {
+  try {
   // CORS configuration
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -34,10 +35,17 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'Database initialization failed', message: err.message });
   }
 
-  // Parse path and query
-  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-  const path = url.pathname.replace(/\/+$/, '');
-  const method = req.method.toUpperCase();
+  // Parse path and query accurately across Vercel rewrites and direct sub-function invocations
+  const rawUrl = req.headers['x-matched-path'] || req.headers['x-forwarded-uri'] || req.url || '';
+  const url = new URL(rawUrl, `http://${req.headers.host || 'localhost'}`);
+  let path = url.pathname.replace(/\/+$/, '');
+
+  // Normalize path to always start with /api or /actuator
+  if (!path.startsWith('/api') && !path.startsWith('/actuator')) {
+    path = `/api${path.startsWith('/') ? '' : '/'}${path}`;
+  }
+
+  const method = req.method ? req.method.toUpperCase() : 'GET';
 
   // Ensure body is parsed if delivered as raw string
   if (typeof req.body === 'string') {
@@ -191,4 +199,13 @@ export default async function handler(req: any, res: any) {
   }
 
   return res.status(404).json({ error: 'Endpoint not found', path });
+  } catch (fatalErr: any) {
+    console.error('Fatal unhandled error in API handler:', fatalErr);
+    if (!res.headersSent) {
+      return res.status(500).json({
+        error: 'Internal Server Error',
+        message: fatalErr.message || String(fatalErr)
+      });
+    }
+  }
 }
