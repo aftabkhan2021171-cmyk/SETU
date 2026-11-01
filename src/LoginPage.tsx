@@ -136,7 +136,7 @@ export function Login() {
             onClick={() => setTheme(theme === 'sunlight' ? 'default' : 'sunlight')}
             title="Toggle Outdoor High-Contrast Sunlight Mode"
           >
-            {theme === 'sunlight' ? '☀️ Sunlight: ON' : '☀️ Sun Mode'}
+            {theme === 'sunlight' ? ' Sunlight: ON' : ' Bright Mode'}
           </button>
           <button
             type="button"

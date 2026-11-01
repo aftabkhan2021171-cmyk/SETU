@@ -160,7 +160,7 @@ function Shell() {
         {/* Display Mode Switcher (Outdoor Sunlight / Dark / Default) */}
         <div style={{ marginBottom: 12 }}>
           <label style={{ fontSize: '0.72rem', color: 'var(--grey)', textTransform: 'uppercase', letterSpacing: '.05em', display: 'block', marginBottom: 3 }}>
-            🎨 Display Mode
+            Display Mode
           </label>
           <div className="row" style={{ gap: 4 }}>
             <button
@@ -193,7 +193,7 @@ function Shell() {
               onClick={() => setTheme('sunlight')}
               title="High-Contrast Mode for Direct Outdoor Sunlight"
             >
-              ☀️ Sun
+              Bright
             </button>
             <button
               type="button"
@@ -208,7 +208,7 @@ function Shell() {
               }}
               onClick={() => setTheme('dark')}
             >
-              🌙 Dark
+              Dark
             </button>
           </div>
         </div>
@@ -271,7 +271,7 @@ function Shell() {
               onClick={() => setTheme(theme === 'sunlight' ? 'default' : theme === 'default' ? 'dark' : 'sunlight')}
               title="Toggle Display Theme"
             >
-              {theme === 'sunlight' ? '☀️ Sun' : theme === 'dark' ? '🌙 Dark' : '🎨 Mode'}
+              {theme === 'sunlight' ? ' Bright' : theme === 'dark' ? ' Dark' : ' Mode'}
             </button>
           </div>
         </div>

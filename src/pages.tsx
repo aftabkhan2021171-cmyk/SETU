@@ -309,7 +309,7 @@ export function Dashboard() {
                             border: '1px solid #A7F3D0'
                           }}
                         >
-                          👶 &lt;15y
+                          &lt;15y
                         </span>
                       )}
                     </td>
@@ -391,7 +391,7 @@ export function Dashboard() {
               <div style={{ marginTop: 14, padding: '12px 14px', background: '#F0FDF4', border: '1.5px solid #86EFAC', borderRadius: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: '1.1rem' }}>👶</span>
+                    <span style={{ fontSize: '1.1rem' }}></span>
                     <div>
                       <b style={{ color: '#166534', fontSize: '0.88rem' }}>Pediatric Vaccination Chart (Age &lt; 15)</b>
                       <span style={{ fontSize: '0.74rem', color: '#15803D', display: 'block' }}>
@@ -480,7 +480,7 @@ export function Dashboard() {
             {/* Quick Column Presets (Feature 7) */}
             <div style={{ marginTop: 12 }}>
               <span style={{ fontSize: '0.78rem', color: 'var(--grey)', fontWeight: 600, display: 'block', marginBottom: 6 }}>
-                ⚡ Quick Presets:
+                Quick Presets:
               </span>
               <div className="row" style={{ gap: 4 }}>
                 {PRESET_COLUMNS.map(preset => {
@@ -655,7 +655,7 @@ export function Dashboard() {
 
       {viewingVaxPatient && (
         <Dialog
-          title={`👶 Pediatric Vaccination Record: ${viewingVaxPatient.name} (Age: ${viewingVaxPatient.age})`}
+          title={` Pediatric Vaccination Record: ${viewingVaxPatient.name} (Age: ${viewingVaxPatient.age})`}
           onClose={() => setViewingVaxPatient(null)}
         >
           <div>
@@ -837,7 +837,7 @@ export function Vitals({ pid }: { pid: string }) {
           {activePatient && activePatient.age < 15 && (
             <div style={{ marginTop: 10, padding: '8px 12px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span>👶</span>
+                <span></span>
                 <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#065F46' }}>
                   Pediatric Patient (Age: {activePatient.age}y)
                 </span>
@@ -1011,7 +1011,7 @@ export function Doctor() {
                             color: '#047857',
                             border: '1px solid #A7F3D0'
                           }}>
-                            👶 Child ({p.age}y) · 💉 {getChildVaccineStatus(p.age, p.customFields).completedCount}/{getChildVaccineStatus(p.age, p.customFields).totalApplicable} Vax
+                            Child ({p.age}y) · 💉 {getChildVaccineStatus(p.age, p.customFields).completedCount}/{getChildVaccineStatus(p.age, p.customFields).totalApplicable} Vax
                           </span>
                         </div>
                       )}
@@ -1189,7 +1189,7 @@ export function Sync() {
         </div>
         <span style={{ fontSize: '0.8rem', color: s.online ? '#059669' : '#D97706', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.online ? '#10B981' : '#F59E0B' }} />
-          {s.online ? '⚡ Auto-Sync on Reconnect: ACTIVE' : '📦 Queued for Auto-Sync on Reconnect'}
+          {s.online ? ' Auto-Sync on Reconnect: ACTIVE' : ' Queued for Auto-Sync on Reconnect'}
         </span>
       </div>
 
