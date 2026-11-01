@@ -31,6 +31,10 @@
   - Network state listener (`window.addEventListener('online')`) and in-app online toggle immediately unpause the sync engine and dispatch a debounced sync chunk (`triggerSyncDebounced(100)`).
   - Transparent toast notifications: alerts the user when network is restored (`🟢 Network connected: auto-syncing X offline record(s)...`) and confirms when upload finishes (`☁️ Auto-sync complete: offline records successfully synced to cloud!`).
   - Seamless token exchange: allows offline demo unlock sessions to acquire live server tokens upon reconnecting without session eviction.
+- [x] **1.11 Mobile LAN Plain-HTTP Insecure Context Compatibility (Fixed `ReferenceError: CryptoKey is not defined`)**:
+  - In non-secure contexts (such as accessing `http://<LAN_IP>:5173/` over WiFi from a mobile phone browser), WebCrypto restricts `globalThis.CryptoKey` and `globalThis.crypto.subtle`.
+  - Replaced naked `key instanceof CryptoKey` expressions with `isWebCryptoKey(key)` and declared a safe global fallback class for `globalThis.CryptoKey`.
+  - Added test in `tests/phase1_crypto.test.ts` verifying complete PBKDF2/AES-GCM encryption, decryption, key wrapping, and verifier verification when `CryptoKey` and `crypto.subtle` are both missing.
 
 ---
 

@@ -130,4 +130,36 @@ describe('Phase 1.1 & 1.3: Cryptographic Key Hierarchy & Authenticated GCM', () 
       Object.defineProperty(globalThis.crypto, 'subtle', { value: originalSubtle, configurable: true });
     }
   });
+
+  it('works in mobile browser plain-HTTP insecure contexts where CryptoKey and crypto.subtle are undefined', async () => {
+    const originalSubtle = globalThis.crypto?.subtle;
+    const originalCryptoKey = (globalThis as any).CryptoKey;
+    try {
+      // Simulate mobile browser over HTTP where subtle and CryptoKey do not exist
+      Object.defineProperty(globalThis.crypto, 'subtle', { value: undefined, configurable: true });
+      delete (globalThis as any).CryptoKey;
+
+      const salt = generateSalt();
+      const pin = 'Mobile-Http-Pin-4321';
+      const kek = await deriveKeyFromPin(pin, salt);
+      expect(kek.isFallback).toBe(true);
+
+      const verifier = await createVerifier(kek);
+      const isValid = await verifyKey(kek, verifier.verifierCipher, verifier.verifierIv);
+      expect(isValid).toBe(true);
+
+      const dek = await generateDataKey('mobile-dek');
+      const wrapped = await wrapDataKey(dek, kek);
+      const unwrapped = await unwrapDataKey(wrapped.wrappedDekCipher, wrapped.wrappedDekIv, kek, 'mobile-dek');
+      expect(unwrapped.keyBytes).toEqual(dek.keyBytes);
+
+      const patientData = JSON.stringify({ name: 'Simran Kaur', vitals: { bp: '120/80' } });
+      const enc = await encryptString(patientData, unwrapped);
+      const dec = await decryptString(enc.ciphertext, enc.iv, unwrapped);
+      expect(dec).toBe(patientData);
+    } finally {
+      Object.defineProperty(globalThis.crypto, 'subtle', { value: originalSubtle, configurable: true });
+      (globalThis as any).CryptoKey = originalCryptoKey;
+    }
+  });
 });

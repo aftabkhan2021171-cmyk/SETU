@@ -12,6 +12,19 @@ import { sha256 } from '@noble/hashes/sha256';
 export const PBKDF2_ITERATIONS = 310000;
 export const VERIFIER_PLAINTEXT = 'SETU_KEY_VERIFIER_V1';
 
+// Prevent ReferenceError: CryptoKey is not defined in insecure contexts (plain-HTTP mobile LAN access)
+if (typeof globalThis !== 'undefined' && typeof (globalThis as any).CryptoKey === 'undefined') {
+  try {
+    (globalThis as any).CryptoKey = class CryptoKey {};
+  } catch { }
+}
+
+function isWebCryptoKey(key: any): key is CryptoKey {
+  return typeof globalThis !== 'undefined' &&
+    typeof (globalThis as any).CryptoKey !== 'undefined' &&
+    key instanceof (globalThis as any).CryptoKey;
+}
+
 export interface SetuKey {
   keyBytes: Uint8Array; // 32 bytes (256-bit)
   webCryptoKey?: CryptoKey;
@@ -203,15 +216,16 @@ export async function verifyKey(key: AnyKey, verifierCipher: string, verifierIv:
  * Extracts raw 32-byte key buffer from SetuKey or CryptoKey.
  */
 async function getKeyBytes(key: AnyKey): Promise<Uint8Array> {
-  if ('keyBytes' in key && key.keyBytes) {
-    return key.keyBytes;
+  if (key && typeof key === 'object' && 'keyBytes' in key && (key as SetuKey).keyBytes) {
+    return (key as SetuKey).keyBytes;
   }
-  if ('rawKey' in key && key.rawKey instanceof Uint8Array) {
-    return key.rawKey;
+  if (key && typeof key === 'object' && 'rawKey' in key && (key as any).rawKey instanceof Uint8Array) {
+    return (key as any).rawKey;
   }
-  if (key instanceof CryptoKey || ('webCryptoKey' in key && key.webCryptoKey)) {
-    const cryptoKey = key instanceof CryptoKey ? key : key.webCryptoKey!;
-    if (globalThis.crypto?.subtle?.exportKey) {
+  const isWebKey = isWebCryptoKey(key);
+  if (isWebKey || (key && typeof key === 'object' && 'webCryptoKey' in key && (key as SetuKey).webCryptoKey)) {
+    const cryptoKey = isWebKey ? (key as CryptoKey) : (key as SetuKey).webCryptoKey!;
+    if (typeof globalThis !== 'undefined' && globalThis.crypto?.subtle?.exportKey) {
       try {
         const raw = await globalThis.crypto.subtle.exportKey('raw', cryptoKey);
         return new Uint8Array(raw);
@@ -225,7 +239,8 @@ export async function encryptBytes(data: Uint8Array, key: AnyKey): Promise<{ cip
   const ivHex = generateIv();
   const iv = hexToArrayBuffer(ivHex);
 
-  const cryptoKey = key instanceof CryptoKey ? key : ('webCryptoKey' in key ? key.webCryptoKey : undefined);
+  const isWebKey = isWebCryptoKey(key);
+  const cryptoKey = isWebKey ? (key as CryptoKey) : (key && typeof key === 'object' && 'webCryptoKey' in key ? (key as SetuKey).webCryptoKey : undefined);
   if (cryptoKey && typeof globalThis !== 'undefined' && globalThis.crypto?.subtle?.encrypt) {
     try {
       const encrypted = await globalThis.crypto.subtle.encrypt(
@@ -254,7 +269,8 @@ export async function decryptBytes(ciphertextHex: string, ivHex: string, key: An
   const iv = hexToArrayBuffer(ivHex);
   const ciphertext = hexToArrayBuffer(ciphertextHex);
 
-  const cryptoKey = key instanceof CryptoKey ? key : ('webCryptoKey' in key ? key.webCryptoKey : undefined);
+  const isWebKey = isWebCryptoKey(key);
+  const cryptoKey = isWebKey ? (key as CryptoKey) : (key && typeof key === 'object' && 'webCryptoKey' in key ? (key as SetuKey).webCryptoKey : undefined);
   if (cryptoKey && typeof globalThis !== 'undefined' && globalThis.crypto?.subtle?.decrypt) {
     try {
       const decrypted = await globalThis.crypto.subtle.decrypt(
