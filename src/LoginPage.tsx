@@ -19,7 +19,7 @@ import {
 import { Button, useToast, Dialog } from './ui';
 import { useStore } from './store';
 import { go } from './pages';
-import { loginWithCredentials, getApiBaseUrl, setApiBaseUrl } from './lib/auth';
+import { loginWithCredentials, getApiBaseUrl, setApiBaseUrl, HealthWorkerCadre, CADRE_INFO, SEEDED_OFFLINE_USERS } from './lib/auth';
 import { useI18n, LANGUAGES, LangCode } from './lib/i18n';
 import './login.css';
 
@@ -34,6 +34,7 @@ export function Login() {
   const { lang, setLang, theme, setTheme } = useI18n();
   const toast = useToast();
   const [roleHint, setRoleHint] = useState<RoleHint>('chw');
+  const [selectedCadre, setSelectedCadre] = useState<HealthWorkerCadre>('CHW');
   const [id, setId] = useState('chw1');
   const [pin, setPin] = useState('Test-Password-1');
   const [show, setShow] = useState(false);
@@ -159,6 +160,51 @@ export function Login() {
 
         <form className="lg-card" onSubmit={submit} noValidate>
           <div className="lg-row">
+            <span className="lg-cap">Health Worker Cadre / Category</span>
+            <span className="lg-role" style={{ color: CADRE_INFO[selectedCadre]?.color }}>
+              {CADRE_INFO[selectedCadre]?.label} · {CADRE_INFO[selectedCadre]?.title.split('(')[0]}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+            {(Object.keys(CADRE_INFO) as HealthWorkerCadre[]).map(cadreKey => {
+              const info = CADRE_INFO[cadreKey];
+              const isSelected = selectedCadre === cadreKey;
+              return (
+                <button
+                  type="button"
+                  key={cadreKey}
+                  style={{
+                    padding: '5px 11px',
+                    borderRadius: 16,
+                    border: `1.5px solid ${isSelected ? info.color : '#D1D5DB'}`,
+                    background: isSelected ? info.bg : '#FFFFFF',
+                    color: isSelected ? info.color : '#374151',
+                    fontWeight: isSelected ? 700 : 500,
+                    fontSize: '0.78rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    transition: 'all 0.15s ease'
+                  }}
+                  onClick={() => {
+                    setSelectedCadre(cadreKey);
+                    if (cadreKey === 'ASHA') { setId('asha1'); setRoleHint('chw'); }
+                    else if (cadreKey === 'ANM') { setId('anm1'); setRoleHint('chw'); }
+                    else if (cadreKey === 'AWW') { setId('aww1'); setRoleHint('chw'); }
+                    else if (cadreKey === 'CHW') { setId('chw1'); setRoleHint('chw'); }
+                    else if (cadreKey === 'DOCTOR') { setId('doctor1'); setRoleHint('doctor'); }
+                    else if (cadreKey === 'ADMIN') { setId('admin1'); setRoleHint('doctor'); }
+                  }}
+                >
+                  <span>{info.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="lg-row">
             <span className="lg-cap" id="rl">Select operating role hint</span>
             <span className="lg-role">{roleHint === 'chw' ? 'Front-line CHW' : 'Clinician'}</span>
           </div>
@@ -204,7 +250,7 @@ export function Login() {
           </div>
           {e.id ? <div className="err">{e.id}</div> : (
             <p className="lg-help">
-              <LuInfo size={14} />Seeded accounts: <code>chw1</code>, <code>chw2</code>, <code>doctor1</code>, <code>admin1</code>
+              <LuInfo size={14} />Seeded cadres: <code>asha1</code>, <code>anm1</code>, <code>aww1</code>, <code>chw1</code>, <code>doctor1</code>, <code>admin1</code>
             </p>
           )}
 
@@ -262,10 +308,10 @@ export function Login() {
               variant="outlined"
               size="sm"
               icon={<LuZap />}
-              onClick={() => quickFieldLogin(roleHint === 'chw' ? 'chw1' : 'doctor1')}
+              onClick={() => quickFieldLogin(id in SEEDED_OFFLINE_USERS ? id : (roleHint === 'chw' ? 'chw1' : 'doctor1'))}
               disabled={loading}
             >
-              Instant Offline Access ({roleHint === 'chw' ? 'CHW Harpreet' : 'Dr. Gurpreet'})
+              Instant Offline Access ({SEEDED_OFFLINE_USERS[id]?.user.name || (roleHint === 'chw' ? 'CHW Harpreet' : 'Dr. Gurpreet')})
             </Button>
           </div>
 

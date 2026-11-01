@@ -181,6 +181,20 @@ async function applyField(db: SetuDatabase, patientId: string, field: string, va
       pat.name = value;
     } else if (field === 'age') {
       pat.age = Number(value);
+    } else {
+      const cf = pat.customFields || {};
+      if (field === 'customFields') {
+        try {
+          const parsed = JSON.parse(value);
+          pat.customFields = { ...cf, ...parsed };
+        } catch {
+          cf[field] = value;
+          pat.customFields = cf;
+        }
+      } else {
+        cf[field] = value;
+        pat.customFields = cf;
+      }
     }
     pat.version += 1;
     pat.updatedAt = e.createdAt;

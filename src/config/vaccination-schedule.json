@@ -1,0 +1,104 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "status": "placeholder - needs clinical review",
+    "description": "Pediatric National Immunization Schedule (Birth to 16 years) for community health workers"
+  },
+  "milestones": [
+    {
+      "id": "birth",
+      "ageLabel": "At Birth",
+      "minAgeYears": 0,
+      "maxAgeYears": 15,
+      "vaccines": [
+        { "code": "BCG", "name": "BCG (Tuberculosis)", "dose": "0.1 ml ID", "essential": true },
+        { "code": "OPV_0", "name": "OPV-0 (Oral Polio)", "dose": "2 drops oral", "essential": true },
+        { "code": "HEPB_BIRTH", "name": "Hepatitis B (Birth dose)", "dose": "0.5 ml IM", "essential": true }
+      ]
+    },
+    {
+      "id": "6_weeks",
+      "ageLabel": "6 Weeks (1.5 Months)",
+      "minAgeYears": 0.1,
+      "maxAgeYears": 15,
+      "vaccines": [
+        { "code": "PENTA_1", "name": "Pentavalent-1 (DPT + Hep B + Hib)", "dose": "0.5 ml IM", "essential": true },
+        { "code": "OPV_1", "name": "OPV-1", "dose": "2 drops oral", "essential": true },
+        { "code": "ROTA_1", "name": "Rotavirus-1", "dose": "5 drops oral", "essential": true },
+        { "code": "PCV_1", "name": "PCV-1 (Pneumococcal)", "dose": "0.5 ml IM", "essential": false }
+      ]
+    },
+    {
+      "id": "10_weeks",
+      "ageLabel": "10 Weeks (2.5 Months)",
+      "minAgeYears": 0.2,
+      "maxAgeYears": 15,
+      "vaccines": [
+        { "code": "PENTA_2", "name": "Pentavalent-2", "dose": "0.5 ml IM", "essential": true },
+        { "code": "OPV_2", "name": "OPV-2", "dose": "2 drops oral", "essential": true },
+        { "code": "ROTA_2", "name": "Rotavirus-2", "dose": "5 drops oral", "essential": true }
+      ]
+    },
+    {
+      "id": "14_weeks",
+      "ageLabel": "14 Weeks (3.5 Months)",
+      "minAgeYears": 0.25,
+      "maxAgeYears": 15,
+      "vaccines": [
+        { "code": "PENTA_3", "name": "Pentavalent-3", "dose": "0.5 ml IM", "essential": true },
+        { "code": "OPV_3", "name": "OPV-3", "dose": "2 drops oral", "essential": true },
+        { "code": "ROTA_3", "name": "Rotavirus-3", "dose": "5 drops oral", "essential": true },
+        { "code": "PCV_2", "name": "PCV-2", "dose": "0.5 ml IM", "essential": false }
+      ]
+    },
+    {
+      "id": "9_months",
+      "ageLabel": "9 - 12 Months",
+      "minAgeYears": 0.75,
+      "maxAgeYears": 15,
+      "vaccines": [
+        { "code": "MR_1", "name": "Measles-Rubella 1 (MR-1)", "dose": "0.5 ml SC", "essential": true },
+        { "code": "PCV_BOOSTER", "name": "PCV Booster", "dose": "0.5 ml IM", "essential": false },
+        { "code": "VITA_1", "name": "Vitamin A (1st Dose)", "dose": "1 ml (1 lakh IU)", "essential": true }
+      ]
+    },
+    {
+      "id": "16_24_months",
+      "ageLabel": "16 - 24 Months",
+      "minAgeYears": 1.3,
+      "maxAgeYears": 15,
+      "vaccines": [
+        { "code": "MR_2", "name": "Measles-Rubella 2 (MR-2)", "dose": "0.5 ml SC", "essential": true },
+        { "code": "DPT_BOOSTER_1", "name": "DPT Booster-1", "dose": "0.5 ml IM", "essential": true },
+        { "code": "OPV_BOOSTER", "name": "OPV Booster", "dose": "2 drops oral", "essential": true }
+      ]
+    },
+    {
+      "id": "5_6_years",
+      "ageLabel": "5 - 6 Years",
+      "minAgeYears": 5,
+      "maxAgeYears": 15,
+      "vaccines": [
+        { "code": "DPT_BOOSTER_2", "name": "DPT Booster-2", "dose": "0.5 ml IM", "essential": true }
+      ]
+    },
+    {
+      "id": "10_years",
+      "ageLabel": "10 Years",
+      "minAgeYears": 9.5,
+      "maxAgeYears": 15,
+      "vaccines": [
+        { "code": "TD_10Y", "name": "Td (Tetanus & adult Diphtheria)", "dose": "0.5 ml IM", "essential": true }
+      ]
+    },
+    {
+      "id": "15_years",
+      "ageLabel": "15 - 16 Years",
+      "minAgeYears": 14.5,
+      "maxAgeYears": 16,
+      "vaccines": [
+        { "code": "TD_16Y", "name": "Td Booster (Tetanus & adult Diphtheria)", "dose": "0.5 ml IM", "essential": true }
+      ]
+    }
+  ]
+}

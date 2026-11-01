@@ -231,7 +231,10 @@ export async function initDatabase(): Promise<void> {
         ('u-001', 'chw1', 'CHW One (synthetic)', 'CHW', 'Ludhiana', $1),
         ('u-002', 'chw2', 'CHW Two (synthetic)', 'CHW', 'Khanna', $1),
         ('u-003', 'doctor1', 'Dr. Synthetic', 'DOCTOR', 'HQ', $1),
-        ('u-004', 'admin1', 'Admin (synthetic)', 'ADMIN', 'HQ', $1)
+        ('u-004', 'admin1', 'Admin (synthetic)', 'ADMIN', 'HQ', $1),
+        ('u-005', 'asha1', 'Sunita Devi (ASHA)', 'CHW', 'Ludhiana', $1),
+        ('u-006', 'anm1', 'Pooja Sharma (ANM)', 'CHW', 'Ludhiana', $1),
+        ('u-007', 'aww1', 'Meena Kumari (AWW)', 'CHW', 'Ludhiana', $1)
       `, [hash]);
     }
   } else {
@@ -244,7 +247,10 @@ export async function initDatabase(): Promise<void> {
         { id: 'u-001', staff_id: 'chw1', name: 'CHW One (synthetic)', role: 'CHW', district: 'Ludhiana', password_hash: hash, active: true },
         { id: 'u-002', staff_id: 'chw2', name: 'CHW Two (synthetic)', role: 'CHW', district: 'Khanna', password_hash: hash, active: true },
         { id: 'u-003', staff_id: 'doctor1', name: 'Dr. Synthetic', role: 'DOCTOR', district: 'HQ', password_hash: hash, active: true },
-        { id: 'u-004', staff_id: 'admin1', name: 'Admin (synthetic)', role: 'ADMIN', district: 'HQ', password_hash: hash, active: true }
+        { id: 'u-004', staff_id: 'admin1', name: 'Admin (synthetic)', role: 'ADMIN', district: 'HQ', password_hash: hash, active: true },
+        { id: 'u-005', staff_id: 'asha1', name: 'Sunita Devi (ASHA)', role: 'CHW', district: 'Ludhiana', password_hash: hash, active: true },
+        { id: 'u-006', staff_id: 'anm1', name: 'Pooja Sharma (ANM)', role: 'CHW', district: 'Ludhiana', password_hash: hash, active: true },
+        { id: 'u-007', staff_id: 'aww1', name: 'Meena Kumari (AWW)', role: 'CHW', district: 'Ludhiana', password_hash: hash, active: true }
       ];
 
       for (const u of defaultUsers) {

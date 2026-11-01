@@ -22,6 +22,10 @@
 - [x] **1.6 Local PIN lock screen**: Auto-lock on inactivity (default 5 min), lock on app background (Capacitor App), exponential attempt back-off.
 - [x] **1.7 Server-side SQL + AES-256**: Encrypt PostgreSQL columns with AES-256-GCM using `SETU_DATA_KEY`.
 - [ ] **1.8 (Optional) SQLCipher**: For Android local database (pending approval).
+- [x] **1.9 Health Worker Cadres, Pediatric Vaccination Chart (<15y), & Field Catch-Up Summary**:
+  - Frontline cadres: ASHA, ANM, AWW, CHW, Doctor, Admin with 1-click login selector, profile badges, and seeded offline accounts (`asha1`, `anm1`, `aww1`, `chw1`, `doctor1`, `admin1`).
+  - Pediatric Vaccination Chart: National Immunization Schedule config (`config/vaccination-schedule.json`, labeled `needs clinical review`), milestone calculation, checkboxes for all vaccines, table badges, and modal record updater for children under 15.
+  - Field Catch-Up Periodic Summary: Evaluates multi-day entries (72h) generating summarized banner text like `"5 new entries with 2 severe"` with quick severe filtering.
 
 ---
 

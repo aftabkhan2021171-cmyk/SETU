@@ -4,7 +4,7 @@ import { Button, IconButton, Toasts } from './ui';
 import { Store, useStore } from './store';
 import { Login } from './LoginPage';
 import { Dashboard, Vitals, Doctor, Conflicts, Sync, go } from './pages';
-import { logoutUser, touchActivity, isSessionLocked, subscribeLockState, lockSession } from './lib/auth';
+import { logoutUser, touchActivity, isSessionLocked, subscribeLockState, lockSession, getCadreInfo } from './lib/auth';
 import { useI18n, LANGUAGES, LangCode, AppTheme } from './lib/i18n';
 import { PinLockModal } from './PinLockModal';
 
@@ -90,6 +90,27 @@ function Shell() {
             <IconButton label="Close menu" size="sm" onClick={() => setOpen(false)}><LuX /></IconButton>
           </span>
         </div>
+
+        {s.user && (
+          <div style={{ margin: '6px 0 10px', padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: 6, border: '1px solid var(--line)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--ink)' }}>{s.user.name}</span>
+              <span style={{
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                padding: '1px 6px',
+                borderRadius: 10,
+                background: getCadreInfo(s.user.cadre).bg,
+                color: getCadreInfo(s.user.cadre).color
+              }}>
+                {s.user.cadre || s.user.role}
+              </span>
+            </div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--grey)', marginTop: 2 }}>
+              {s.user.district} District
+            </div>
+          </div>
+        )}
 
         {/* Multi-Language Dropdown */}
         <div style={{ margin: '4px 0 10px' }}>
@@ -188,9 +209,21 @@ function Shell() {
 
       <div className="main">
         <div className="top" style={{ justifyContent: 'space-between' }}>
-          <div className="row" style={{ gap: 8 }}>
+          <div className="row" style={{ gap: 8, alignItems: 'center' }}>
             <IconButton label="Open menu" onClick={() => setOpen(true)}><LuMenu /></IconButton>
             <b style={{ color: 'var(--maroon)', letterSpacing: '.12em' }}>SETU</b>
+            {s.user && (
+              <span style={{
+                fontSize: '0.68rem',
+                fontWeight: 700,
+                padding: '2px 7px',
+                borderRadius: 8,
+                background: getCadreInfo(s.user.cadre).bg,
+                color: getCadreInfo(s.user.cadre).color
+              }}>
+                {s.user.cadre || s.user.role}
+              </span>
+            )}
           </div>
           <div className="row" style={{ gap: 6 }}>
             <select

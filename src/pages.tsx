@@ -5,6 +5,15 @@ import { useStore, Status, Patient } from './store';
 import { db, OutboxItem } from './lib/db';
 import { useI18n } from './lib/i18n';
 import { exportPatientsToCsv } from './lib/export';
+import { computeCatchUpSummary } from './lib/catchup';
+import {
+  isChild,
+  getChildVaccineStatus,
+  getMilestonesForChildAge,
+  getAllMilestones,
+  getAllPediatricVaccines,
+  toggleVaccineInFields
+} from './lib/vaccination';
 
 export const go = (p: string) => { location.hash = p; };
 
@@ -25,6 +34,48 @@ export function Dashboard() {
   const [f, setF] = useState<'All' | Status>('All');
   const [add, setAdd] = useState(false);
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
+
+  // Child vaccination states
+  const [childVax, setChildVax] = useState<Record<string, boolean>>({});
+  const [viewingVaxPatient, setViewingVaxPatient] = useState<Patient | null>(null);
+  const [vaxModalFields, setVaxModalFields] = useState<Record<string, boolean>>({});
+  const [dismissCatchUp, setDismissCatchUp] = useState(false);
+
+  // Compute periodic catch-up summary
+  const catchUp = computeCatchUpSummary(s.patients, 72);
+
+  useEffect(() => {
+    if (viewingVaxPatient) {
+      const initial: Record<string, boolean> = {};
+      const allVax = getAllPediatricVaccines();
+      for (const v of allVax) {
+        if (viewingVaxPatient.customFields?.[`vax_${v.code}`] === 'done') {
+          initial[v.code] = true;
+        }
+      }
+      setVaxModalFields(initial);
+    }
+  }, [viewingVaxPatient]);
+
+  const saveVaxUpdates = async () => {
+    if (!viewingVaxPatient) return;
+    try {
+      const updatedCustom: Record<string, string> = { ...(viewingVaxPatient.customFields || {}) };
+      const allVax = getAllPediatricVaccines();
+      for (const v of allVax) {
+        if (vaxModalFields[v.code]) {
+          updatedCustom[`vax_${v.code}`] = 'done';
+        } else {
+          delete updatedCustom[`vax_${v.code}`];
+        }
+      }
+      await updatePatientField(viewingVaxPatient.id, 'customFields', JSON.stringify(updatedCustom));
+      toast(`Updated vaccination record for ${viewingVaxPatient.name}`);
+      setViewingVaxPatient(null);
+    } catch (err: any) {
+      toast(err.message || 'Failed to update vaccination record', true);
+    }
+  };
 
   // Form states for Add Patient
   const [n, setN] = useState('');
@@ -83,6 +134,14 @@ export function Dashboard() {
         }
       }
 
+      if (age < 15) {
+        for (const [vCode, isDone] of Object.entries(childVax)) {
+          if (isDone) {
+            customMap[`vax_${vCode}`] = 'done';
+          }
+        }
+      }
+
       const pid = await createPatient({
         name: `${n.trim()} (synthetic)`,
         age,
@@ -95,6 +154,7 @@ export function Dashboard() {
       setN('');
       setA('');
       setL('');
+      setChildVax({});
       setCustomCols([]);
       setErr('');
       setAllowDupOverride(false);
@@ -122,6 +182,41 @@ export function Dashboard() {
   return (
     <div className="page">
       <h1>{t.dashboard}</h1>
+
+      {catchUp.hasCatchUp && !dismissCatchUp && (
+        <div className="banner" style={{ background: '#EFF6FF', borderColor: '#3B82F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: '1.25rem' }}>📋</span>
+            <div>
+              <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#1E40AF' }}>
+                Field Catch-Up Summary: "{catchUp.summaryText}"
+              </span>
+              <div style={{ fontSize: '0.78rem', color: '#4B5563', marginTop: 2 }}>
+                Logged in after field period · {catchUp.totalNew} entries ({catchUp.severeCount} severe, {catchUp.followUpCount} follow-up, {catchUp.childCount} pediatric &lt;15y)
+              </div>
+            </div>
+          </div>
+          <div className="row" style={{ gap: 6 }}>
+            {catchUp.severeCount > 0 && (
+              <Button size="sm" variant={f === 'Urgent' ? 'primary' : 'secondary'} onClick={() => setF('Urgent')}>
+                🚨 Filter Severe ({catchUp.severeCount})
+              </Button>
+            )}
+            <Button size="sm" variant="outlined" onClick={() => setF('All')}>
+              View All ({catchUp.totalNew})
+            </Button>
+            <button
+              type="button"
+              style={{ background: 'none', border: 'none', fontSize: '1rem', cursor: 'pointer', color: '#6B7280', padding: '0 4px' }}
+              onClick={() => setDismissCatchUp(true)}
+              title="Dismiss catch-up banner"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="banner">
         District: <b>{s.user?.district || 'General'}</b> · Logged in as: <b>{s.user?.name}</b> ({s.user?.role})
       </div>
@@ -198,7 +293,26 @@ export function Dashboard() {
                         </span>
                       )}
                     </td>
-                    <td>{p.age}</td>
+                    <td>
+                      <div>{p.age}</div>
+                      {p.age < 15 && (
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            marginTop: 3,
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            padding: '1px 6px',
+                            borderRadius: 10,
+                            background: '#ECFDF5',
+                            color: '#047857',
+                            border: '1px solid #A7F3D0'
+                          }}
+                        >
+                          👶 &lt;15y
+                        </span>
+                      )}
+                    </td>
                     <td>
                       <div>{p.locality}</div>
                       {p.customFields && Object.keys(p.customFields).length > 0 && (
@@ -223,13 +337,24 @@ export function Dashboard() {
                     </td>
                     <td><Tag s={p.status} /></td>
                     <td>
-                      <div className="row" style={{ gap: 6 }}>
+                      <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
                         <Button size="sm" variant="outlined" onClick={() => go(`/vitals?p=${p.id}`)}>
                           Record vitals
                         </Button>
                         <Button size="sm" variant="outlined" icon={<LuPencil />} onClick={() => { setEditPatient(p); setEditVal(''); setEditErr(''); }}>
                           Edit
                         </Button>
+                        {p.age < 15 && (
+                          <Button
+                            size="sm"
+                            variant="outlined"
+                            style={{ borderColor: '#10B981', color: '#047857', background: '#F0FDF4' }}
+                            onClick={() => setViewingVaxPatient(p)}
+                            title="View/Update Pediatric Vaccination Chart"
+                          >
+                            💉 Vax ({getChildVaccineStatus(p.age, p.customFields).completedCount}/{getChildVaccineStatus(p.age, p.customFields).totalApplicable})
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -260,6 +385,97 @@ export function Dashboard() {
               <label htmlFor="al">{t.locality}</label>
               <input id="al" value={l} onChange={e => setL(e.target.value)} placeholder="e.g. Gill Road, Ludhiana" />
             </div>
+
+            {/* Pediatric Vaccination Chart for Children < 15 Years */}
+            {Number(a) < 15 && Number(a) >= 0 && a.trim() !== '' && (
+              <div style={{ marginTop: 14, padding: '12px 14px', background: '#F0FDF4', border: '1.5px solid #86EFAC', borderRadius: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: '1.1rem' }}>👶</span>
+                    <div>
+                      <b style={{ color: '#166534', fontSize: '0.88rem' }}>Pediatric Vaccination Chart (Age &lt; 15)</b>
+                      <span style={{ fontSize: '0.74rem', color: '#15803D', display: 'block' }}>
+                        National Immunization Schedule (milestones up to age {a})
+                      </span>
+                    </div>
+                  </div>
+                  <span style={{
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: 12,
+                    background: '#DCFCE7',
+                    color: '#166534',
+                    border: '1px solid #86EFAC'
+                  }}>
+                    {Object.values(childVax).filter(Boolean).length} / {getMilestonesForChildAge(Number(a)).flatMap(m => m.vaccines).length} Completed
+                  </span>
+                </div>
+
+                <div style={{ maxHeight: 220, overflowY: 'auto', paddingRight: 4, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {getMilestonesForChildAge(Number(a)).map(m => {
+                    const allInMilestoneDone = m.vaccines.every(v => childVax[v.code]);
+                    return (
+                      <div key={m.id} style={{ background: '#FFFFFF', padding: '8px 10px', borderRadius: 6, border: '1px solid #BBF7D0' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#14532D' }}>
+                            {m.ageLabel}
+                          </span>
+                          <button
+                            type="button"
+                            style={{
+                              fontSize: '0.7rem',
+                              padding: '1px 6px',
+                              background: allInMilestoneDone ? '#F3F4F6' : '#ECFDF5',
+                              border: '1px solid #86EFAC',
+                              borderRadius: 4,
+                              color: '#166534',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => {
+                              const next = { ...childVax };
+                              const toggleTo = !allInMilestoneDone;
+                              for (const v of m.vaccines) {
+                                next[v.code] = toggleTo;
+                              }
+                              setChildVax(next);
+                            }}
+                          >
+                            {allInMilestoneDone ? 'Clear all' : 'Mark all done'}
+                          </button>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 4 }}>
+                          {m.vaccines.map(v => (
+                            <label
+                              key={v.code}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                fontSize: '0.78rem',
+                                padding: '3px 4px',
+                                cursor: 'pointer',
+                                background: childVax[v.code] ? '#F0FDF4' : 'transparent',
+                                borderRadius: 4
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={!!childVax[v.code]}
+                                onChange={e => setChildVax({ ...childVax, [v.code]: e.target.checked })}
+                              />
+                              <span style={{ fontWeight: childVax[v.code] ? 700 : 500, color: childVax[v.code] ? '#166534' : 'var(--ink)' }}>
+                                {v.code} <span style={{ color: '#6B7280', fontSize: '0.72rem' }}>({v.dose})</span>
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Quick Column Presets (Feature 7) */}
             <div style={{ marginTop: 12 }}>
@@ -436,6 +652,99 @@ export function Dashboard() {
           </form>
         </Dialog>
       )}
+
+      {viewingVaxPatient && (
+        <Dialog
+          title={`👶 Pediatric Vaccination Record: ${viewingVaxPatient.name} (Age: ${viewingVaxPatient.age})`}
+          onClose={() => setViewingVaxPatient(null)}
+        >
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, padding: '8px 12px', background: '#F0FDF4', borderRadius: 6, border: '1px solid #BBF7D0' }}>
+              <div>
+                <b style={{ color: '#166534', fontSize: '0.9rem' }}>National Immunization Status</b>
+                <div style={{ fontSize: '0.75rem', color: '#15803D' }}>
+                  Pediatric milestone vaccination tracking (Birth to 16 years).
+                </div>
+              </div>
+              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#166534', padding: '3px 8px', background: '#DCFCE7', borderRadius: 12, border: '1px solid #86EFAC' }}>
+                {Object.values(vaxModalFields).filter(Boolean).length} / {getMilestonesForChildAge(viewingVaxPatient.age).flatMap(m => m.vaccines).length} Completed
+              </span>
+            </div>
+
+            <div style={{ maxHeight: '55vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10, paddingRight: 4 }}>
+              {getMilestonesForChildAge(viewingVaxPatient.age).map(m => {
+                const allDone = m.vaccines.every(v => vaxModalFields[v.code]);
+                return (
+                  <div key={m.id} style={{ border: '1px solid var(--line)', borderRadius: 6, padding: '8px 12px', background: '#FFF' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--maroon)' }}>
+                        {m.ageLabel}
+                      </span>
+                      <button
+                        type="button"
+                        style={{
+                          fontSize: '0.72rem',
+                          padding: '2px 8px',
+                          background: allDone ? '#F3F4F6' : '#ECFDF5',
+                          border: '1px solid #10B981',
+                          borderRadius: 4,
+                          color: '#047857',
+                          cursor: 'pointer',
+                          fontWeight: 600
+                        }}
+                        onClick={() => {
+                          const next = { ...vaxModalFields };
+                          const toVal = !allDone;
+                          for (const v of m.vaccines) {
+                            next[v.code] = toVal;
+                          }
+                          setVaxModalFields(next);
+                        }}
+                      >
+                        {allDone ? 'Clear milestone' : 'Mark all done'}
+                      </button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 6 }}>
+                      {m.vaccines.map(v => (
+                        <label
+                          key={v.code}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            padding: '4px 6px',
+                            borderRadius: 4,
+                            cursor: 'pointer',
+                            background: vaxModalFields[v.code] ? '#ECFDF5' : 'transparent',
+                            border: `1px solid ${vaxModalFields[v.code] ? '#A7F3D0' : 'transparent'}`
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={!!vaxModalFields[v.code]}
+                            onChange={e => setVaxModalFields({ ...vaxModalFields, [v.code]: e.target.checked })}
+                          />
+                          <span style={{ fontSize: '0.8rem', fontWeight: vaxModalFields[v.code] ? 700 : 400 }}>
+                            <b>{v.code}</b> – {v.name}
+                            <span style={{ display: 'block', fontSize: '0.7rem', color: '#6B7280' }}>
+                              Dose: {v.dose} {v.essential && <span style={{ color: '#DC2626' }}>· Essential</span>}
+                            </span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="row" style={{ marginTop: 16, justifyContent: 'flex-end', gap: 8 }}>
+              <Button variant="outlined" onClick={() => setViewingVaxPatient(null)}>Cancel</Button>
+              <Button onClick={saveVaxUpdates}>Save Immunization Updates</Button>
+            </div>
+          </div>
+        </Dialog>
+      )}
     </div>
   );
 }
@@ -524,6 +833,20 @@ export function Vitals({ pid }: { pid: string }) {
               ))}
             </div>
           )}
+
+          {activePatient && activePatient.age < 15 && (
+            <div style={{ marginTop: 10, padding: '8px 12px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>👶</span>
+                <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#065F46' }}>
+                  Pediatric Patient (Age: {activePatient.age}y)
+                </span>
+              </div>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#047857' }}>
+                💉 {getChildVaccineStatus(activePatient.age, activePatient.customFields).completedCount} / {getChildVaccineStatus(activePatient.age, activePatient.customFields).totalApplicable} Vaccines Done
+              </span>
+            </div>
+          )}
         </div>
         <div className="grid">
           {Object.keys(lim).map(k => (
@@ -585,6 +908,8 @@ export function Vitals({ pid }: { pid: string }) {
 export function Doctor() {
   const { s } = useStore();
   const [f, setF] = useState<'All' | Status>('All');
+  const [dismissCatchUp, setDismissCatchUp] = useState(false);
+  const catchUp = computeCatchUpSummary(s.patients, 72);
   const rank: Record<Status, number> = { Urgent: 0, 'Follow-up': 1, Stable: 2 };
 
   const rows = [...s.patients]
@@ -596,6 +921,40 @@ export function Doctor() {
   return (
     <div className="page">
       <h1>Doctor triage</h1>
+
+      {catchUp.hasCatchUp && !dismissCatchUp && (
+        <div className="banner" style={{ background: '#EFF6FF', borderColor: '#3B82F6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: '1.25rem' }}>📋</span>
+            <div>
+              <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#1E40AF' }}>
+                Field Catch-Up Summary: "{catchUp.summaryText}"
+              </span>
+              <div style={{ fontSize: '0.78rem', color: '#4B5563', marginTop: 2 }}>
+                Multiple field records logged across last 72h ({catchUp.severeCount} severe, {catchUp.followUpCount} follow-up, {catchUp.childCount} pediatric entries)
+              </div>
+            </div>
+          </div>
+          <div className="row" style={{ gap: 6 }}>
+            {catchUp.severeCount > 0 && (
+              <Button size="sm" variant={f === 'Urgent' ? 'primary' : 'secondary'} onClick={() => setF('Urgent')}>
+                🚨 Filter Severe ({catchUp.severeCount})
+              </Button>
+            )}
+            <Button size="sm" variant="outlined" onClick={() => setF('All')}>
+              View All ({catchUp.totalNew})
+            </Button>
+            <button
+              type="button"
+              style={{ background: 'none', border: 'none', fontSize: '1rem', cursor: 'pointer', color: '#6B7280', padding: '0 4px' }}
+              onClick={() => setDismissCatchUp(true)}
+              title="Dismiss catch-up banner"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
       {openConflicts.length > 0 && (
         <div className="banner" role="alert" style={{ background: '#FEE2E2', borderColor: '#DC2626' }}>
           <LuTriangleAlert size={18} style={{ color: '#DC2626' }} />
@@ -639,7 +998,24 @@ export function Doctor() {
                 return (
                   <tr key={p.id}>
                     <td><Tag s={p.status} /></td>
-                    <td><b>{p.id}</b> {p.name}</td>
+                    <td>
+                      <div><b>{p.id}</b> {p.name}</div>
+                      {p.age < 15 && (
+                        <div style={{ marginTop: 2 }}>
+                          <span style={{
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            padding: '1px 6px',
+                            borderRadius: 10,
+                            background: '#ECFDF5',
+                            color: '#047857',
+                            border: '1px solid #A7F3D0'
+                          }}>
+                            👶 Child ({p.age}y) · 💉 {getChildVaccineStatus(p.age, p.customFields).completedCount}/{getChildVaccineStatus(p.age, p.customFields).totalApplicable} Vax
+                          </span>
+                        </div>
+                      )}
+                    </td>
                     <td>{p.district}</td>
                     <td>{v ? `BP ${v.sys}/${v.dia}, SpO2 ${v.spo2}%` : 'None recorded'}</td>
                     <td>

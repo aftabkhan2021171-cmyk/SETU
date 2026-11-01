@@ -21,11 +21,30 @@ import {
   SetuKey
 } from './crypto';
 
+export type HealthWorkerCadre = 'ASHA' | 'ANM' | 'AWW' | 'CHW' | 'DOCTOR' | 'ADMIN';
+
+export const CADRE_INFO: Record<HealthWorkerCadre, { code: HealthWorkerCadre; label: string; title: string; color: string; bg: string }> = {
+  ASHA: { code: 'ASHA', label: 'ASHA', title: 'Accredited Social Health Activist (ASHA)', color: '#047857', bg: '#D1FAE5' },
+  ANM: { code: 'ANM', label: 'ANM', title: 'Auxiliary Nurse Midwife (ANM)', color: '#1D4ED8', bg: '#DBEAFE' },
+  AWW: { code: 'AWW', label: 'AWW', title: 'Anganwadi Worker (AWW)', color: '#B45309', bg: '#FEF3C7' },
+  CHW: { code: 'CHW', label: 'CHW', title: 'Community Health Worker (General)', color: '#0F766E', bg: '#CCFBF1' },
+  DOCTOR: { code: 'DOCTOR', label: 'Doctor', title: 'Medical Officer / Clinician', color: '#6D28D9', bg: '#EDE9FE' },
+  ADMIN: { code: 'ADMIN', label: 'Admin', title: 'Program / District Administrator', color: '#334155', bg: '#F1F5F9' }
+};
+
+export function getCadreInfo(cadre?: string): { code: HealthWorkerCadre; label: string; title: string; color: string; bg: string } {
+  if (cadre && cadre in CADRE_INFO) {
+    return CADRE_INFO[cadre as HealthWorkerCadre];
+  }
+  return CADRE_INFO.CHW;
+}
+
 export interface AuthUser {
   id: string;
   staffId: string;
   name: string;
   role: 'CHW' | 'DOCTOR' | 'ADMIN';
+  cadre?: HealthWorkerCadre;
   district: string;
 }
 
@@ -40,19 +59,31 @@ export interface Session {
 
 export const SEEDED_OFFLINE_USERS: Record<string, { user: AuthUser; pin: string }> = {
   chw1: {
-    user: { id: 'U-CHW1', staffId: 'chw1', name: 'Harpreet Kaur', role: 'CHW', district: 'Ludhiana' },
+    user: { id: 'U-CHW1', staffId: 'chw1', name: 'Harpreet Kaur', role: 'CHW', cadre: 'CHW', district: 'Ludhiana' },
     pin: 'Test-Password-1'
   },
   chw2: {
-    user: { id: 'U-CHW2', staffId: 'chw2', name: 'Simran Singh', role: 'CHW', district: 'Khanna' },
+    user: { id: 'U-CHW2', staffId: 'chw2', name: 'Simran Singh', role: 'CHW', cadre: 'CHW', district: 'Khanna' },
+    pin: 'Test-Password-1'
+  },
+  asha1: {
+    user: { id: 'U-ASHA1', staffId: 'asha1', name: 'Sunita Devi (ASHA)', role: 'CHW', cadre: 'ASHA', district: 'Ludhiana' },
+    pin: 'Test-Password-1'
+  },
+  anm1: {
+    user: { id: 'U-ANM1', staffId: 'anm1', name: 'Pooja Sharma (ANM)', role: 'CHW', cadre: 'ANM', district: 'Ludhiana' },
+    pin: 'Test-Password-1'
+  },
+  aww1: {
+    user: { id: 'U-AWW1', staffId: 'aww1', name: 'Meena Kumari (AWW)', role: 'CHW', cadre: 'AWW', district: 'Ludhiana' },
     pin: 'Test-Password-1'
   },
   doctor1: {
-    user: { id: 'U-DOC1', staffId: 'doctor1', name: 'Dr. Gurpreet Sandhu', role: 'DOCTOR', district: 'HQ' },
+    user: { id: 'U-DOC1', staffId: 'doctor1', name: 'Dr. Gurpreet Sandhu', role: 'DOCTOR', cadre: 'DOCTOR', district: 'HQ' },
     pin: 'Test-Password-1'
   },
   admin1: {
-    user: { id: 'U-ADM1', staffId: 'admin1', name: 'Admin HQ', role: 'ADMIN', district: 'HQ' },
+    user: { id: 'U-ADM1', staffId: 'admin1', name: 'Admin HQ', role: 'ADMIN', cadre: 'ADMIN', district: 'HQ' },
     pin: 'Test-Password-1'
   }
 };
